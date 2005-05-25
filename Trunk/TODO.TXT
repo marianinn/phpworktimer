@@ -1,0 +1,5 @@
+* editing worktimes
+* remove .htaccess by using ?mode
+
+
+* checks on DB (eg end_time > start_time)
