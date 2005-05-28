@@ -16,9 +16,9 @@ else {
 
 
 if ($parent_id) {
-	
+
 	$name = empty($_GET['name']) ? NULL : pg_escape_string($_GET['name']);
-	
+
 	pg_query("
 		INSERT INTO task(name, parent)
 		VALUES('$name', $parent_id)

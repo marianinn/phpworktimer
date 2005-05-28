@@ -7,7 +7,7 @@ if (!empty($_GET['id']) && preg_match('/^[0-9]+$/', $_GET['id']))
 else {
 	$task_id = NULL;
 }
-$name = empty($_GET['name']) ? NULL : pg_escape_string($_GET['name']); 
+$name = empty($_GET['name']) ? NULL : pg_escape_string($_GET['name']);
 
 
 if ($task_id) {
@@ -18,9 +18,9 @@ if ($task_id) {
 	");
 	list($parent_id) = pg_fetch_row($rs);
 	if ($parent_id) {
-		$uri_parent = "?parent=$parent_id";	
+		$uri_parent = "?parent=$parent_id";
 	}
-	
+
 	pg_query("
 		UPDATE task
 		SET name = '$name'
