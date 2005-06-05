@@ -26,6 +26,9 @@ if (!empty($task_id)) {
 			AND end_time IS NULL
 	");
 }
+else {
+	exit("Empty GET[task]");
+}
 
 header("Location: show.php$uri_parent");
 

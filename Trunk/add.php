@@ -1,12 +1,12 @@
 <?php
 
-if (empty($_GET['id']))
+if (empty($_GET['parent']))
 {
 	$parent_id = 'NULL';
 	$uri_parent = '';
 }
-elseif (preg_match('/^[0-9]+$/', $_GET['id'])) {
-	$parent_id = $_GET['id'];
+elseif (preg_match('/^[0-9]+$/', $_GET['parent'])) {
+	$parent_id = $_GET['parent'];
 	$uri_parent = "?parent=$parent_id";
 }
 else {
@@ -14,15 +14,19 @@ else {
 	$uri_parent = '';
 }
 
+if (!empty($_GET['name'])) {
+	$task_name =  pg_escape_string($_GET['name']);
+}
 
-if ($parent_id) {
 
-	$name = empty($_GET['name']) ? NULL : pg_escape_string($_GET['name']);
-
+if ($parent_id && $task_name) {
 	pg_query("
 		INSERT INTO task(name, parent)
-		VALUES('$name', $parent_id)
+		VALUES('$task_name', $parent_id)
 	");
+}
+else {
+	exit("Error: empty or bad GET[parent] or GET[name]");
 }
 
 

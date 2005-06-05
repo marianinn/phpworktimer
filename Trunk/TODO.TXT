@@ -1,4 +1,6 @@
+* reformat code to OOP
 * editing worktimes
+* split GET and POST
 * remove .htaccess by using ?mode
 
 

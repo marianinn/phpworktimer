@@ -24,6 +24,9 @@ if (!empty($task_id)) {
 		WHERE id = $task_id
 	");
 }
+else {
+	exit("Error: empty or bad GET[task]");
+}
 
 header("Location: show.php$uri_parent");
 

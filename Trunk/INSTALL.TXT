@@ -1,4 +1,4 @@
 * Read README.TXT
-* Create database phpworktimer;
-* Execute phpworktimer.sql in it;
-* Rewrite SMARTY_DIR in index.php
+* Create database 'phpworktimer'.
+* Execute phpworktimer.sql in it.
+* Rewrite SMARTY_DIR in index.php.

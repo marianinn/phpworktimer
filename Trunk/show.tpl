@@ -1,13 +1,11 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <meta name="description" content="Script for keeping your working intervals." />
-<title>Phpworktimer</title>
-
-<meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
-
+<title>phpworktimer</title>
 
 <style type="text/css">
 {literal}
@@ -36,21 +34,6 @@ a:hover {
 	height: 2em;
 }
 
-input.add {
-	width: 15em;
-	font-weight: bold;
-	font-family: 'verdana';
-	font-size:1em;
-	height: 1.5em;
-}
-
-td.id{
-	background-color:#ddf;
-	font-size: .7em;
-	width: 2.5em;
-	color: #00f
-}
-
 td.name {
 	background-color:#eef;
 	padding-left:1em;
@@ -58,13 +41,6 @@ td.name {
 }
 td.name:hover {
 	background-color: #ddd;
-}
-input.input_name {
-	display: none;
-	font-weight: bold;
-	font-family: 'verdana';
-	font-size:1em;
-	height: 1.5em;
 }
 
 td.start {
@@ -92,13 +68,31 @@ td.manage:hover {
 	background-color: #fff;
 }
 
-td.worktime_regular {
-	border: 1px #77d solid;
+td.worktime_manage {
+	font-size:.6em;
+	width: 4em;
+	padding:0;
 }
-td.worktime_highlight {
-	border: 1px #ddd solid;
-	background-color: #fdd;
+
+input.new_task {
+	width: 15em;
+	font-family: 'verdana';
+	font-size:1em;
 }
+input.task_name {
+	display: none;
+	font-weight: bold;
+	font-family: 'verdana';
+	font-size:1em;
+	height: 1.5em;
+}
+input.start_time {
+	display: none;
+	font-family: 'verdana';
+	font-size:1em;
+	color: #050;
+}
+
 {/literal}
 </style>
 
@@ -120,18 +114,34 @@ function start(task_id) {
 function end(task_id) {
 	location.href = 'end.php?task='+task_id;
 }
-function edit(task_id, task_name) {
-	document.getElementById('span_name_' + task_id).style.display = 'none';
-	document.getElementById('input_name_' + task_id).style.display = 'inline';
-	document.getElementById('input_name_' + task_id).disabled = false;
-	document.getElementById('input_id_' + task_id).disabled = false;
-	document.getElementById('input_name_' + task_id).focus();
-	document.getElementById('input_name_' + task_id).select();
+function edit_task(task_id) {
+	document.getElementById('span_name_'   + task_id).style.display = 'none';
+	document.getElementById('hidden_task_' + task_id).disabled = false;
+	document.getElementById('input_name_'  + task_id).style.display = 'inline';
+	document.getElementById('input_name_'  + task_id).disabled = false;
+	document.getElementById('input_name_'  + task_id).focus();
+	document.getElementById('input_name_'  + task_id).select();
+	document.getElementById('td_name_'     + task_id).onclick = function(){};
 }
 function delete_task(task_id, task_name) {
 	if (window.confirm('Do you really want to delete task \'' + task_name + '\'?'))
 	{
 		location.href = 'delete.php?task='+task_id;
+	}
+}
+function edit_worktime(worktime_id) {
+	document.getElementById('span_start_time_'  + worktime_id).style.display = 'none';
+	document.getElementById('hidden_worktime_'  + worktime_id).disabled = false;
+	document.getElementById('input_start_time_' + worktime_id).style.display = 'inline';
+	document.getElementById('input_start_time_' + worktime_id).disabled = false;
+	document.getElementById('input_start_time_' + worktime_id).focus();
+	document.getElementById('input_start_time_' + worktime_id).select();
+	document.tasks_form.action = 'edit_worktime.php';
+}                                  
+function delete_worktime(worktime_id) {
+	if (window.confirm('Do you really want to delete worktime id = ' + worktime_id + '?'))
+	{
+		location.href = 'delete_worktime.php?worktime='+task_id;
 	}
 }
 {/literal}
@@ -159,19 +169,19 @@ function delete_task(task_id, task_name) {
 <tr><td>&nbsp;</td></tr>
 <tr>
 <td align="center">
-	<form action="add.php" method="get" name="input_form">
+	<form action="add.php" method="get">
 		<span id="above_input">Add new task</span>
-		<input type="hidden" name="id" value="{$parent.id}"/>
-		<input type="text" name="name" class="add"/>
+		<input type="hidden" name="parent" value="{$parent.id}"/>
+		<input type="text" name="name" class="new_task"/>
 	</form>
 </td>
 </tr>
 
-<form action="edit.php" method="get" name="input_form">
+<form action="edit.php" method="get" name="tasks_form">
 {foreach from=$tasks item=task}
 <tr>
 <tr><td>&nbsp;</td></tr>
-<td class="{if $task.is_working_on}worktime_highlight{else}worktime_regular{/if}">
+<td style="{if $task.is_working_on}border: 3px #77d solid;{/if}">
 	<table
 		width="100%"
 		cellspacing="0"
@@ -179,13 +189,23 @@ function delete_task(task_id, task_name) {
 		style="height: 2em"
 	>
 	<tr>
-	<td align="center" class="id">
-		{$task.id}
-	</td>
-	<td align="left" class="name" onClick="show({$task.id})">
+	<td align="left" id="td_name_{$task.id}" class="name" onClick="show({$task.id})">
 		<span id="span_name_{$task.id}">{$task.name}</span>
-		<input type="hidden" id="input_id_{$task.id}" name="id" value="{$task.id}" disabled="true"/>
-		<input type="text" id="input_name_{$task.id}" name="name" value="{$task.name}" class="input_name" disabled="true"/>
+		<input
+			type="hidden"
+			id="hidden_task_{$task.id}"
+			name="task"
+			value="{$task.id}"
+			disabled="true"
+		/>
+		<input
+			type="text"
+			id="input_name_{$task.id}"
+			name="name"
+			value="{$task.name}"
+			class="task_name"
+			disabled="true"
+		/>
 	</td>
 	<td align="center" class="start" onClick="start({$task.id})">
 		Start
@@ -193,35 +213,71 @@ function delete_task(task_id, task_name) {
 	<td align="center" class="end" onClick="end({$task.id})">
 		End
 	</td>
-	<td align="right" class="manage">
-		<a href="javascript:edit({$task.id}, '{$task.name}')">Edit</a><br/>
+	<td align="center" class="manage">
+		{$task.id}
+		<a href="javascript:edit_task({$task.id})">Edit</a><br/>
 		<a href="javascript:delete_task({$task.id}, '{$task.name}')">Delete</a>
 	</td>
 	</tr>
 	</table>
 	
 	
-	<table style="font-weiht: bold;">
-	{foreach from=$task.worktimes item=worktime}
-	<tr>
-	<td style="font-size: .6em;">
-		{$worktime.id}.
-	</td>
+	<table style="font-weiht: bold; padding:0px;" cellspacing="0">
+	{foreach from=$task.worktimes item=worktime name=worktime}
+	<tr style="
+	{if $smarty.foreach.worktime.iteration is even}
+		background-color: #f5f5f5;
+	{else}
+		background-color: #ffffff;
+	{/if}
+	">
 	{if $worktime.end_time}
-	<td style="color: #050;" colspan="3">
-		{$worktime.start_time}
+	<td style="color: #050; width:11em;">
+		<span id="span_start_time_{$worktime.id}">{$worktime.start_time}</span>
+		<input
+			type="hidden"
+			id="hidden_worktime_{$worktime.id}"
+			name="worktime"
+			value="{$worktime.id}"
+			disabled="false"
+		/>
+		<input
+			type="text"
+			id="input_start_time_{$worktime.id}"
+			name="start_time"
+			value="{$worktime.start_time}"
+			class="start_time"
+			disabled="true"
+		/>
 	</td>
-	<td>--</td>
-	<td style="color: #800;">
+	<td>-</td>
+	<td style="color: #800; width:11em;">
 		{$worktime.end_time}
 	</td>
-	{else}
+	<td>:</td>
 	<td>
+		{$worktime.duration}
+	</td>
+	{else}
+	<td colspan="5">
 		<b>{$worktime.start_time}</b>
 	</td>
 	{/if}
+	<td align="center" class="worktime_manage">
+		{$worktime.id}
+		<a href="javascript:edit_worktime({$worktime.id})">Edit</a><br/>
+		<a href="javascript:delete_worktime({$worktime.id})">Delete</a>
+	</td>
 	</tr>
 	{/foreach}
+	{if $task.total}
+	<tr style="font-weight: bold;">
+	<td colspan="6" align="right">
+		Total:
+		{$task.total} = ${$task.cost}
+	</td>
+	</tr>
+	{/if}
 	</table>
 </td>
 </tr>

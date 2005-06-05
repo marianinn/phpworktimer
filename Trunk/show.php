@@ -46,9 +46,14 @@ function get_tasks($parent_id) {
 	$timer_turned_on = false;
 
 	$rs = pg_query("
-		SELECT *
+		SELECT
+			task.id,
+			name,
+			SUM(end_time - start_time) AS total
 		FROM task
+			LEFT JOIN worktime ON task.id = worktime.task 
 		WHERE parent ".($parent_id ? " = $parent_id" : "IS NULL")."
+		GROUP BY task.id, name
 		ORDER BY id DESC
 	");
 	$tasks = array();
@@ -56,10 +61,26 @@ function get_tasks($parent_id) {
 		$tasks[$task['id']] = $task;
 		$tasks[$task['id']]['worktimes'] = array();
 		$tasks[$task['id']]['is_working_on'] = false;
+		
+		if ($task['total']) {
+			$total = explode(':', $task['total']);
+			if ($total[2] >= 30) {
+				$total[1]++;
+				if ($total[1] < 10) {
+					$total[1] = '0' . $total[1];
+				}
+				elseif ($total[1] == 60) {
+					$total[1] = '00';
+					$total[0]++;
+				}
+			}
+			$tasks[$task['id']]['total'] =  (int)$total[0] . ':' . $total[1];
+			$tasks[$task['id']]['cost'] =  round(4*($total[0] + $total[1]/60), 2);
+		}
 	}
 
 	$rs = pg_query("
-		SELECT *, worktime.id AS id
+		SELECT *, worktime.id AS id, end_time-start_time AS duration
 		FROM worktime
 			INNER JOIN task ON task.id = worktime.task
 		WHERE parent ".($parent_id ? " = $parent_id" : "IS NULL")."
