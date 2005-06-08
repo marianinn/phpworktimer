@@ -1,4 +1,5 @@
 <?php
+require('index.php');
 
 if (!empty($_GET['parent']) && preg_match('/^[0-9]+$/', $_GET['parent'])) {
 	$parent_id = $_GET['parent'];

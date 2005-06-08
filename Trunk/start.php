@@ -1,4 +1,5 @@
 <?php
+require('index.php');
 
 if (!empty($_GET['task']) && preg_match('/^[0-9]+$/', $_GET['task']))
 {

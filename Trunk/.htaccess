@@ -1,3 +1,0 @@
-RewriteEngine On
-RewriteRule ^(favicon.[a-z]+)$ $1 [last]
-RewriteRule ^.*$ index.php [last]

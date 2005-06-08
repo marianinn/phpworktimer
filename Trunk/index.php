@@ -14,15 +14,4 @@ if (!is_resource($DBH) || pg_connection_status($DBH) != PGSQL_CONNECTION_OK)
 	exit; // Error or notice has just shown
 }
 
-$action = strrchr($_SERVER['REQUEST_URI'], '/');
-$action = substr($action, 1, strpos($action . '.', '.') - 1);
-if (!in_array($action, array('show', 'start', 'end', 'add', 'edit', 'delete'))) {
-	header('HTTP/1.1 404 Not Found', true, 404);
-	exit("Error: 404");
-}
-else {
-	require(ROOT_DIR.'/'.$action.'.php');
-}
-
-
 ?>

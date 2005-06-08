@@ -1,4 +1,5 @@
 <?php
+require('index.php');
 
 if (empty($_GET['parent']))
 {
