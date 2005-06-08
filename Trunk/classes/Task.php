@@ -2,6 +2,7 @@
 class Task {
 	var $id;
 	var $name;
+	var $parentTaskId;
 	var $total;
 	var $isWorkingOn;
 	
@@ -9,9 +10,12 @@ class Task {
 		$this->id = $assocTask['id'];
 		$this->name = $assocTask['name'];
 		$this->total = $assocTask['total'];
+		$this->parentTaskId = isset($assocTask['parent']) ? $assocTask['parent'] : NULL;
 		$this->isWorkingOn = false;
 		
-		$this->_CountCost();
+		if ($this->total) {
+			$this->_CountCost();
+		}
 	}
 	
 	function AddWorktime($assocWorktime) {
@@ -31,21 +35,19 @@ class Task {
 	 * Counts $this->cost and parses $this->total
 	 */
 	function _CountCost() {
-		if ($this->total) {
-			$total = explode(':', $this->total);
-			if ($total[2] >= 30) {
-				$total[1]++;
-				if ($total[1] < 10) {
-					$total[1] = '0' . $total[1];
-				}
-				elseif ($total[1] == 60) {
-					$total[1] = '00';
-					$total[0]++;
-				}
+		$total = explode(':', $this->total);
+		if ($total[2] >= 30) {
+			$total[1]++;
+			if ($total[1] < 10) {
+				$total[1] = '0' . $total[1];
 			}
-			$this->total = (int)$total[0] . ':' . $total[1];
-			$this->cost = round(4*($total[0] + $total[1]/60), 2);
+			elseif ($total[1] == 60) {
+				$total[1] = '00';
+				$total[0]++;
+			}
 		}
+		$this->total = (int)$total[0] . ':' . $total[1];
+		$this->cost = round(4*($total[0] + $total[1]/60), 2);
 	}
 	
 	function Delete() {

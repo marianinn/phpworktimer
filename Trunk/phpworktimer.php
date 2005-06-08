@@ -1,64 +1,87 @@
 <?php
 
-define('ROOT_DIR', $_SERVER['DOCUMENT_ROOT'].'/phpworktimer');
-define('DB_CONNECTION_STRING', 'host=localhost port=5432 user=uzver dbname=phpworktimer password=nlu');
+$phpworktimer = new phpworktimer();
+$phpworktimer->main();
 
-require('/program files/apache group/apache/php/include/smarty/Smarty.class.php');
-
-global $DBH;// resource link to DB connection
-
-
-$DBH = pg_connect(DB_CONNECTION_STRING);
-if (!is_resource($DBH) || pg_connection_status($DBH) != PGSQL_CONNECTION_OK)
-{
-	exit; // Error or notice has just shown
-}
-session_start();
-
-
-
-if (empty($_GET['headTaskId'])) {
-	exit('Error: empty GET[headTaskId]');
-}
-$taskManager = new TaskManager($_GET['headTaskId']);
-
-if (isset($_GET['action'])) {
-	$action = $_GET['action'];
+class phpworktimer {
+	var $headTaskId;
+	var $taskManager;
+	var $taskId;
+	var $taskName;
 	
-	if (!in_array($action, array('add', 'edit', 'delete', 'start', 'stop'))) {
-		exit('Error: bad GET[action] = ' . $_GET['action']);
-	}
-	if (in_array($action, array('add', 'edit'))) {
-		if (empty($_GET['taskName'])) {
-			exit('Error: empty GET[taskName]');
-		}
-		
-		$taskName = $_GET['taskName'];
-	}
-	if (in_array($action, array('edit', 'delete', 'start'))) {
-		if (empty($_GET['taskId'])) {
-			exit('Error: empty GET[taskId]');
-		}
-		
-		$taskId = $_GET['taskId'];
+	function main() {
+		$this->Init();
+		$this->Input();
+		$this->taskManager = new TaskManager($this->headTaskId);
+		$this->Process();
+		$this->Output();
 	}
 	
-	switch ($action) {
-		case 'add': $taskManager->AddTask($taskName); break;
-		case 'edit': $taskManager->EditTask($taskId, $TaskName); break;
-		case 'delete': $taskManager->DeleteTask($taskId); break;
-		case 'start': $taskManager->Start($taskId); break;
-		case 'stop': $taskManager->Stop(); break;
+	function Init() {
+		define('ROOT_DIR', $_SERVER['DOCUMENT_ROOT'].'/phpworktimer');
+		define('DB_CONNECTION_STRING', 'host=localhost port=5432 user=uzver dbname=phpworktimer password=nlu');
+		
+		require('/program files/apache group/apache/php/include/smarty/Smarty.class.php');
+		require('classes/TaskManager.php');
+		require('classes/Task.php');
+		require('classes/Worktime.php');
+		
+		$DBH = pg_connect(DB_CONNECTION_STRING);
+		if (!is_resource($DBH) || pg_connection_status($DBH) != PGSQL_CONNECTION_OK)
+		{
+			exit(); // Error or notice has been shown
+		}
+		
+		session_start();
+	}
+	
+	function Input() {
+		$this->headTaskId = isset($_GET['headTaskId']) ? $_GET['headTaskId'] : NULL;
+		if (!empty($this->headTaskId) && !preg_match('/^[0-9]+$/', $this->headTaskId)) {
+			exit('Error: bad GET[headTaskId] = ' . $this->headTaskId);
+		}
+		
+		if (isset($_GET['action'])) {
+			$this->action = $_GET['action'];
+			
+			if (!in_array($this->action, array('add', 'edit', 'delete', 'start', 'stop'))) {
+				exit('Error: bad GET[action] = ' . $_GET['action']);
+			}
+			if (in_array($this->action, array('add', 'edit'))) {
+				if (empty($_GET['taskName'])) {
+					exit('Error: empty GET[taskName]');
+				}
+				
+				$this->taskName = $_GET['taskName'];
+			}
+			if (in_array($this->action, array('edit', 'delete', 'start'))) {
+				if (empty($_GET['taskId'])) {
+					exit('Error: empty GET[taskId]');
+				}
+				
+				$this->taskId = $_GET['taskId'];
+			}
+		}
+	}
+	
+	function Process() {
+		if (isset($this->action)) {
+			switch ($this->action) {
+				case 'add': $this->taskManager->AddTask($this->taskName); break;
+				case 'edit': $this->taskManager->EditTask($this->taskId, $this->taskName); break;
+				case 'delete': $this->taskManager->DeleteTask($this->taskId); break;
+				case 'start': $this->taskManager->Start($this->taskId); break;
+				case 'stop': $this->taskManager->Stop(); break;
+			}
+		}
+	}
+	
+	function Output() {
+		$tpl = new Smarty;
+		$tpl->template_dir = ROOT_DIR;
+		$tpl->compile_dir = ROOT_DIR;
+		$tpl->assign('taskManager', $this->taskManager);
+		$tpl->display('phpworktimer.tpl');
 	}
 }
-
-$tpl = new Smarty;
-$tpl->template_dir = ROOT_DIR;
-$tpl->compile_dir = ROOT_DIR;
-$tpl->assign('timer_turned_on', $TaskManager->timerTurnedOn);
-$tpl->assign('tasks', $TaskManager->tasks);
-$tpl->assign('path', $TaskManager->Path());
-$tpl->display('phpworktimer.tpl');
-
-
 ?>

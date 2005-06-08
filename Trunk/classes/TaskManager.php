@@ -1,12 +1,14 @@
 <?php
 class TaskManager {
-	var $tasks;
 	var $headTaskId;
-	var $timerTurnedOn;
+	var $isTimerTurnedOn;
+	var $tasks = array();
+	var $path = array();
 	
 	function TaskManager($headTaskId) {
 		$this->headTaskId = $headTaskId;
 		$this->FillTasks();
+		$this->_SetPath();
 	}
 	
 	function Stop() {
@@ -34,10 +36,9 @@ class TaskManager {
 			GROUP BY task.id, name
 			ORDER BY id DESC
 		");
-		$tasks = array();
 		while ($assocTask = pg_fetch_assoc($rs)) {
 			$task = new Task($assocTask);
-			$tasks[$task->id] = $task;
+			$this->tasks[$task->id] = $task;
 		}
 		
 		
@@ -47,7 +48,7 @@ class TaskManager {
 				worktime.id AS id,
 				task,
 				start_time,
-				end_time,
+				stop_time,
 				stop_time - start_time AS duration
 			FROM worktime
 				INNER JOIN task ON task.id = worktime.task
@@ -60,9 +61,25 @@ class TaskManager {
 			$this->tasks[$worktime->task]->AddWorktime($worktime);
 	
 			if ($this->tasks[$worktime->task]->isWorkingOn) {
-				$this->timerTurnedOn = true;
+				$this->isTimerTurnedOn = true;
 			}
 		}
+	}
+	
+	function _SetPath() {
+		$parentTaskId = $this->headTaskId;
+		while ($parentTaskId != NULL && count($this->path) <= 3) {
+			$rs = pg_query("
+				SELECT id, name, parent
+				FROM task
+				WHERE id = $parentTaskId
+			");
+	
+			$task = new Task(pg_fetch_assoc($rs));
+			$this->path[] = $task;
+			$parentTaskId = $task->parent;
+		}
+		$this->path = array_reverse($this->path);
 	}
 }
 ?>
