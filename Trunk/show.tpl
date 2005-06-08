@@ -46,16 +46,16 @@ td.name:hover {
 td.start {
 	background-color:#efe;
 }
-td.end {
+td.stop {
 	background-color:#fee;
 }
-td.start, td.end{
+td.start, td.stop{
 	font-family: 'helvetica';
 	font-weight: bold;
 	font-size: 1em;
 	width: 5em;
 }
-td.start:hover, td.end:hover {
+td.start:hover, td.stop:hover {
 	background-color:#ddd;
 }
 
@@ -111,8 +111,8 @@ function show(task_id) {
 function start(task_id) {
 	location.href = 'start.php?task='+task_id;
 }
-function end(task_id) {
-	location.href = 'end.php?task='+task_id;
+function stop(task_id) {
+	location.href = 'stop.php?task='+task_id;
 }
 function edit_task(task_id) {
 	document.getElementById('span_name_'   + task_id).style.display = 'none';
@@ -210,8 +210,8 @@ function delete_worktime(worktime_id) {
 	<td align="center" class="start" onClick="start({$task.id})">
 		Start
 	</td>
-	<td align="center" class="end" onClick="end({$task.id})">
-		End
+	<td align="center" class="stop" onClick="stop({$task.id})">
+		Stop
 	</td>
 	<td align="center" class="manage">
 		{$task.id}
@@ -231,7 +231,7 @@ function delete_worktime(worktime_id) {
 		background-color: #ffffff;
 	{/if}
 	">
-	{if $worktime.end_time}
+	{if $worktime.stop_time}
 	<td style="color: #050; width:11em;">
 		<span id="span_start_time_{$worktime.id}">{$worktime.start_time}</span>
 		<input
@@ -252,7 +252,7 @@ function delete_worktime(worktime_id) {
 	</td>
 	<td>-</td>
 	<td style="color: #800; width:11em;">
-		{$worktime.end_time}
+		{$worktime.stop_time}
 	</td>
 	<td>:</td>
 	<td>

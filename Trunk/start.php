@@ -23,7 +23,7 @@ if (!empty($task_id)) {
 	$rs = pg_query("
 		SELECT NULL
 		FROM worktime
-		WHERE end_time IS NULL
+		WHERE stop_time IS NULL
 	");
 
 	if (!pg_num_rows($rs)) {

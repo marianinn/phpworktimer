@@ -22,9 +22,9 @@ if (!empty($task_id)) {
 
 	pg_query("
 		UPDATE worktime
-		SET end_time = 'now'
+		SET stop_time = 'now'
 		WHERE task = $task_id
-			AND end_time IS NULL
+			AND stop_time IS NULL
 	");
 }
 else {

@@ -50,7 +50,7 @@ function get_tasks($parent_id) {
 		SELECT
 			task.id,
 			name,
-			SUM(end_time - start_time) AS total
+			SUM(stop_time - start_time) AS total
 		FROM task
 			LEFT JOIN worktime ON task.id = worktime.task 
 		WHERE parent ".($parent_id ? " = $parent_id" : "IS NULL")."
@@ -81,17 +81,17 @@ function get_tasks($parent_id) {
 	}
 
 	$rs = pg_query("
-		SELECT *, worktime.id AS id, end_time-start_time AS duration
+		SELECT *, worktime.id AS id, stop_time - start_time AS duration
 		FROM worktime
 			INNER JOIN task ON task.id = worktime.task
 		WHERE parent ".($parent_id ? " = $parent_id" : "IS NULL")."
-		ORDER BY end_time
+		ORDER BY stop_time
 	");
 	while ($worktime = pg_fetch_assoc($rs)) {
 
 		$tasks[$worktime['task']]['worktimes'][] = $worktime;
 
-		if (!$worktime['end_time']) {
+		if (!$worktime['stop_time']) {
 			$tasks[$worktime['task']]['is_working_on'] = true;
 			$timer_turned_on = true;
 		}

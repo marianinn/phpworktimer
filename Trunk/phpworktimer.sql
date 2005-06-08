@@ -22,7 +22,7 @@ CREATE TABLE worktime (
     id INT4 NOT NULL DEFAULT nextval('worktime_id_seq'),
     task INT4 NOT NULL,
     start_time TIMESTAMP(0) NOT NULL DEFAULT 'now',
-    end_time TIMESTAMP(0),
+    stop_time TIMESTAMP(0),
 
     PRIMARY KEY (id),
     FOREIGN KEY (task) REFERENCES task (id) ON DELETE CASCADE ON UPDATE CASCADE
@@ -42,13 +42,13 @@ INSERT INTO task(name, parent) VALUES('comments', 5);
 INSERT INTO task(name, parent) VALUES('chat', 3);
 INSERT INTO task(name, parent) VALUES('log', 3);
 
-INSERT INTO worktime(task, end_time) VALUES(7, 'now');
-INSERT INTO worktime(task, end_time) VALUES(7, 'now');
-INSERT INTO worktime(task, end_time) VALUES(7, 'now');
-INSERT INTO worktime(task, end_time) VALUES(7, 'now');
-INSERT INTO worktime(task, end_time) VALUES(7, 'now');
-INSERT INTO worktime(task, end_time) VALUES(8, 'now');
-INSERT INTO worktime(task, end_time) VALUES(8, 'now');
-INSERT INTO worktime(task, end_time) VALUES(8, NULL);
+INSERT INTO worktime(task, stop_time) VALUES(7, 'now');
+INSERT INTO worktime(task, stop_time) VALUES(7, 'now');
+INSERT INTO worktime(task, stop_time) VALUES(7, 'now');
+INSERT INTO worktime(task, stop_time) VALUES(7, 'now');
+INSERT INTO worktime(task, stop_time) VALUES(7, 'now');
+INSERT INTO worktime(task, stop_time) VALUES(8, 'now');
+INSERT INTO worktime(task, stop_time) VALUES(8, 'now');
+INSERT INTO worktime(task, stop_time) VALUES(8, NULL);
 
 COMMIT;
