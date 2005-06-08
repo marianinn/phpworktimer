@@ -96,7 +96,7 @@ input.start_time {
 {/literal}
 </style>
 
-{if $timer_turned_on}
+{if $taskManager->isTimerTurnedOn}
 <link href="favicon.bmp" rel="shortcut icon" />
 {/if}
 
@@ -104,44 +104,46 @@ input.start_time {
 <body>
 
 <script type="text/javascript">
+var headTaskId = {$taskManager->headTaskId|default:"0"};
 {literal}
-function show(task_id) {
-	location.href = 'show.php?parent='+task_id;
+function Show(headTaskId) {
+alert();
+	location.href = '?headTaskId=' + headTaskId;
 }
-function start(task_id) {
-	location.href = 'start.php?task='+task_id;
+function Start(taskId) {
+	location.href = '?action=start&amp;headTaskId=' + headTaskId + '&amp;taskId=' + taskId;
 }
-function stop(task_id) {
-	location.href = 'stop.php?task='+task_id;
+function Stop(taskId) {
+	location.href = '?action=stop&amp;headTaskId=' + headTaskId + '&amp;taskId=' + taskId;
 }
-function edit_task(task_id) {
-	document.getElementById('span_name_'   + task_id).style.display = 'none';
-	document.getElementById('hidden_task_' + task_id).disabled = false;
-	document.getElementById('input_name_'  + task_id).style.display = 'inline';
-	document.getElementById('input_name_'  + task_id).disabled = false;
-	document.getElementById('input_name_'  + task_id).focus();
-	document.getElementById('input_name_'  + task_id).select();
-	document.getElementById('td_name_'     + task_id).onclick = function(){};
+function EditTask(taskId) {
+	document.getElementById('span_name_'   + taskId).style.display = 'none';
+	document.getElementById('hidden_task_' + taskId).disabled = false;
+	document.getElementById('input_name_'  + taskId).style.display = 'inline';
+	document.getElementById('input_name_'  + taskId).disabled = false;
+	document.getElementById('input_name_'  + taskId).focus();
+	document.getElementById('input_name_'  + taskId).select();
+	document.getElementById('td_name_'     + taskId).onclick = function(){};
 }
-function delete_task(taskId, taskName) {
+function DeleteTask(taskId, taskName) {
 	if (window.confirm('Do you really want to delete task \'' + taskName + '\'?'))
 	{
-		location.href = 'delete.php?task='+taskId;
+		location.href = '?action=delete&amp;headTaskId=' + headTaskId + '&amp;taskId=' + taskId;
 	}
 }
-function edit_worktime(worktime_id) {
-	document.getElementById('span_start_time_'  + worktime_id).style.display = 'none';
-	document.getElementById('hidden_worktime_'  + worktime_id).disabled = false;
-	document.getElementById('input_start_time_' + worktime_id).style.display = 'inline';
-	document.getElementById('input_start_time_' + worktime_id).disabled = false;
-	document.getElementById('input_start_time_' + worktime_id).focus();
-	document.getElementById('input_start_time_' + worktime_id).select();
+function EditWorktime(worktimeId) {
+	document.getElementById('span_start_time_'  + worktimeId).style.display = 'none';
+	document.getElementById('hidden_worktime_'  + worktimeId).disabled = false;
+	document.getElementById('input_start_time_' + worktimeId).style.display = 'inline';
+	document.getElementById('input_start_time_' + worktimeId).disabled = false;
+	document.getElementById('input_start_time_' + worktimeId).focus();
+	document.getElementById('input_start_time_' + worktimeId).select();
 	document.tasks_form.action = 'edit_worktime.php';
 }                                  
-function delete_worktime(worktime_id) {
-	if (window.confirm('Do you really want to delete worktime id = ' + worktime_id + '?'))
+function DeleteWorktime(worktimeId) {
+	if (window.confirm('Do you really want to delete worktime id = ' + worktimeId + '?'))
 	{
-		location.href = 'delete_worktime.php?worktime='+task_id;
+		location.href = 'delete_worktime.php?worktime='+taskId;
 	}
 }
 {/literal}
@@ -177,7 +179,9 @@ function delete_worktime(worktime_id) {
 </td>
 </tr>
 
-<form action="edit.php" method="get" name="tasks_form">
+<form action="" method="get" name="tasks_form">
+	<input type="hidden" name="action" value="edit" /> 
+	<input type="hidden" name="headTaskId" value="{$taskManager->headTaskId}" /> 
 {foreach from=$taskManager->tasks item=task}
 <tr>
 <tr><td>&nbsp;</td></tr>
@@ -189,7 +193,7 @@ function delete_worktime(worktime_id) {
 		style="height: 2em"
 	>
 	<tr>
-	<td align="left" id="td_name_{$task->id}" class="name" onClick="show({$task->id})">
+	<td align="left" id="td_name_{$task->id}" class="name" onClick="Show({$task->id})">
 		<span id="span_name_{$task->id}">{$task->name}</span>
 		<input
 			type="hidden"
@@ -215,8 +219,8 @@ function delete_worktime(worktime_id) {
 	</td>
 	<td align="center" class="manage">
 		{$task->id}
-		<a href="javascript:edit_task({$task->id})">Edit</a><br/>
-		<a href="javascript:delete_task({$task->id}, '{$task->name}')">Delete</a>
+		<a href="javascript:EditTask({$task->id})">Edit</a><br/>
+		<a href="javascript:DeleteTask({$task->id}, '{$task->name}')">Delete</a>
 	</td>
 	</tr>
 	</table>
@@ -231,9 +235,9 @@ function delete_worktime(worktime_id) {
 		background-color: #ffffff;
 	{/if}
 	">
-	{if $worktime->stop_time}
+	{if $worktime->stopTime}
 	<td style="color: #050; width:11em;">
-		<span id="span_start_time_{$worktime->id}">{$worktime->start_time}</span>
+		<span id="span_start_time_{$worktime->id}">{$worktime->startTime}</span>
 		<input
 			type="hidden"
 			id="hidden_worktime_{$worktime->id}"
@@ -244,8 +248,8 @@ function delete_worktime(worktime_id) {
 		<input
 			type="text"
 			id="input_start_time_{$worktime->id}"
-			name="start_time"
-			value="{$worktime->start_time}"
+			name="startTime"
+			value="{$worktime->startTime}"
 			class="start_time"
 			disabled="true"
 		/>
@@ -265,8 +269,8 @@ function delete_worktime(worktime_id) {
 	{/if}
 	<td align="center" class="worktime_manage">
 		{$worktime->id}
-		<a href="javascript:edit_worktime({$worktime->id})">Edit</a><br/>
-		<a href="javascript:delete_worktime({$worktime->id})">Delete</a>
+		<a href="javascript:EditWorktime({$worktime->id})">Edit</a><br/>
+		<a href="javascript:DeleteWorktime({$worktime->id})">Delete</a>
 	</td>
 	</tr>
 	{/foreach}
