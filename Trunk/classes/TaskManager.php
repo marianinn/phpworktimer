@@ -12,7 +12,7 @@ class TaskManager {
 	}
 	
 	function Start($taskId) {
-		if ($this->activeTask) {
+		if ($this->activeTaskId) {
 			return false;
 		}
 		$this->tasks[$taskId]->Start();
@@ -20,7 +20,7 @@ class TaskManager {
 	}
 	
 	function Stop() {
-		if (!$this->activeTask) {
+		if (!$this->activeTaskId) {
 			return false;
 		}
 		$this->tasks[$this->activeTaskId]->Stop();
@@ -61,15 +61,15 @@ class TaskManager {
 			FROM worktime
 				INNER JOIN task ON task.id = worktime.task
 			WHERE parent ".($this->headTaskId ? " = $this->headTaskId" : "IS NULL")."
-			ORDER BY stop_time
+			ORDER BY stop_time DESC
 		");
 		while ($assocWorktime = pg_fetch_assoc($rs)) {
 			$worktime = new Worktime($assocWorktime);
 	
 			$this->tasks[$worktime->taskId]->AddWorktime($worktime);
 	
-			if ($this->tasks[$worktime->taskId]->activeWorktime) {				
-				$this->activeTask = $this->tasks[$worktime->taskId];
+			if ($this->tasks[$worktime->taskId]->activeWorktimeId) {				
+				$this->activeTaskId = $this->tasks[$worktime->taskId]->id;
 			}
 		}
 	}

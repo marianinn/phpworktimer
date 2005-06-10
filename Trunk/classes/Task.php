@@ -20,7 +20,7 @@ class Task {
 	}
 	
 	function AddWorktime($worktime) {
-		$this->worktimes[] = $worktime;
+		$this->worktimes[$worktime->id] = $worktime;
 		if (!$worktime->stopTime) {		
 			$this->activeWorktimeId = $worktime->id;
 		}
@@ -32,18 +32,24 @@ class Task {
 			VALUES($this->id, 'now')
 		");
 		$rs = pg_query("
-			SELECT *
+			SELECT *, stop_time - start_time AS duration
 			FROM worktime
 			WHERE id = currval('worktime_id_seq');
 		");
 		$worktime = new Worktime(pg_fetch_assoc($rs));
+		
 		list($this->activeWorktimeId) = $worktime->id;
-		$this->worktimes[] = $worktime;
+		
+		$old_worktimes = $this->worktimes;
+		$this->worktimes = array($worktime->id => $worktime);
+		foreach ($old_worktimes as $worktime) {
+			$this->worktimes[$worktime->id] = $worktime;
+		}
 	}
 	
 	function Stop() {
-		$this->activeWorktime->Stop();
-		$this->activeWorktime = NULL;
+		$this->worktimes[$this->activeWorktimeId]->Stop();
+		$this->activeWorktimeId = NULL;
 	}
 	
 	/**
