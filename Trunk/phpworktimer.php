@@ -10,14 +10,14 @@ class phpworktimer {
 	var $taskName;
 	
 	function main() {
-		$this->Init();
-		$this->Input();
+		$this->_Init();
+		$this->_Input();
 		$this->taskManager = new TaskManager($this->headTaskId);
-		$this->Process();
-		$this->Output();
+		$this->_Process();
+		$this->_Output();
 	}
 	
-	function Init() {
+	function _Init() {
 		define('ROOT_DIR', $_SERVER['DOCUMENT_ROOT'].'/phpworktimer');
 		define('DB_CONNECTION_STRING', 'host=localhost port=5432 user=uzver dbname=phpworktimer password=nlu');
 		
@@ -35,7 +35,7 @@ class phpworktimer {
 		session_start();
 	}
 	
-	function Input() {
+	function _Input() {
 		$this->headTaskId = isset($_GET['headTaskId']) ? $_GET['headTaskId'] : NULL;
 		if (!empty($this->headTaskId) && !preg_match('/^[0-9]+$/', $this->headTaskId)) {
 			exit('Error: bad GET[headTaskId] = ' . $this->headTaskId);
@@ -47,6 +47,7 @@ class phpworktimer {
 			if (!in_array($this->action, array('add', 'edit', 'delete', 'start', 'stop'))) {
 				exit('Error: bad GET[action] = ' . $_GET['action']);
 			}
+			
 			if (in_array($this->action, array('add', 'edit'))) {
 				if (empty($_GET['taskName'])) {
 					exit('Error: empty GET[taskName]');
@@ -54,6 +55,7 @@ class phpworktimer {
 				
 				$this->taskName = $_GET['taskName'];
 			}
+			
 			if (in_array($this->action, array('edit', 'delete', 'start'))) {
 				if (empty($_GET['taskId'])) {
 					exit('Error: empty GET[taskId]');
@@ -64,7 +66,7 @@ class phpworktimer {
 		}
 	}
 	
-	function Process() {
+	function _Process() {
 		if (isset($this->action)) {
 			switch ($this->action) {
 				case 'add': $this->taskManager->AddTask($this->taskName); break;
@@ -76,7 +78,7 @@ class phpworktimer {
 		}
 	}
 	
-	function Output() {
+	function _Output() {
 		$tpl = new Smarty;
 		$tpl->template_dir = ROOT_DIR;
 		$tpl->compile_dir = ROOT_DIR;

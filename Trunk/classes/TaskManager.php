@@ -1,7 +1,7 @@
 <?php
 class TaskManager {
 	var $headTaskId;
-	var $isTimerTurnedOn;
+	var $activeTaskId;
 	var $tasks = array();
 	var $path = array();
 	
@@ -11,12 +11,20 @@ class TaskManager {
 		$this->_SetPath();
 	}
 	
+	function Start($taskId) {
+		if ($this->activeTask) {
+			return false;
+		}
+		$this->tasks[$taskId]->Start();
+		$this->activeTaskId = $taskId;
+	}
+	
 	function Stop() {
-		pg_query("
-			UPDATE worktime
-			SET end_time = 'now'
-			WHERE end_time IS NULL
-		");
+		if (!$this->activeTask) {
+			return false;
+		}
+		$this->tasks[$this->activeTaskId]->Stop();
+		$this->activeTaskId = NULL;
 	}
 	
 	function DeleteTask($taskId) {
@@ -58,10 +66,10 @@ class TaskManager {
 		while ($assocWorktime = pg_fetch_assoc($rs)) {
 			$worktime = new Worktime($assocWorktime);
 	
-			$this->tasks[$worktime->task]->AddWorktime($worktime);
+			$this->tasks[$worktime->taskId]->AddWorktime($worktime);
 	
-			if ($this->tasks[$worktime->task]->isWorkingOn) {
-				$this->isTimerTurnedOn = true;
+			if ($this->tasks[$worktime->taskId]->activeWorktime) {				
+				$this->activeTask = $this->tasks[$worktime->taskId];
 			}
 		}
 	}
@@ -77,7 +85,7 @@ class TaskManager {
 	
 			$task = new Task(pg_fetch_assoc($rs));
 			$this->path[] = $task;
-			$parentTaskId = $task->parent;
+			$parentTaskId = $task->parentTaskId;
 		}
 		$this->path = array_reverse($this->path);
 	}

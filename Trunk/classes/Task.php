@@ -4,12 +4,13 @@ class Task {
 	var $name;
 	var $parentTaskId;
 	var $total;
-	var $isWorkingOn;
+	var $activeWorktimeId;
+	var $worktimes;
 	
 	function Task($assocTask) {
 		$this->id = $assocTask['id'];
 		$this->name = $assocTask['name'];
-		$this->total = $assocTask['total'];
+		$this->total = isset($assocTask['total']) ? $assocTask['total'] : NULL;
 		$this->parentTaskId = isset($assocTask['parent']) ? $assocTask['parent'] : NULL;
 		$this->isWorkingOn = false;
 		
@@ -18,17 +19,31 @@ class Task {
 		}
 	}
 	
-	function AddWorktime($assocWorktime) {
-		$worktime = new Worktime($assocWorktime);
-		$this->worktimes[] = $worktime;		
-		$this->is_working_on = !$worktime->stop_time;
+	function AddWorktime($worktime) {
+		$this->worktimes[] = $worktime;
+		if (!$worktime->stopTime) {		
+			$this->activeWorktimeId = $worktime->id;
+		}
 	}
 	
 	function Start() {
 		pg_query("
 			INSERT INTO worktime(task, start_time)
-			VALUES($task_id, 'now')
+			VALUES($this->id, 'now')
 		");
+		$rs = pg_query("
+			SELECT *
+			FROM worktime
+			WHERE id = currval('worktime_id_seq');
+		");
+		$worktime = new Worktime(pg_fetch_assoc($rs));
+		list($this->activeWorktimeId) = $worktime->id;
+		$this->worktimes[] = $worktime;
+	}
+	
+	function Stop() {
+		$this->activeWorktime->Stop();
+		$this->activeWorktime = NULL;
 	}
 	
 	/**

@@ -107,14 +107,13 @@ input.start_time {
 var headTaskId = {$taskManager->headTaskId|default:"0"};
 {literal}
 function Show(headTaskId) {
-alert();
 	location.href = '?headTaskId=' + headTaskId;
 }
 function Start(taskId) {
 	location.href = '?action=start&amp;headTaskId=' + headTaskId + '&amp;taskId=' + taskId;
 }
-function Stop(taskId) {
-	location.href = '?action=stop&amp;headTaskId=' + headTaskId + '&amp;taskId=' + taskId;
+function Stop() {
+	location.href = '?action=stop&amp;headTaskId=' + headTaskId;
 }
 function EditTask(taskId) {
 	document.getElementById('span_name_'   + taskId).style.display = 'none';
@@ -163,7 +162,7 @@ function DeleteWorktime(worktimeId) {
 
 	{foreach from=$taskManager->path item=task}
 		/
-		<a href="javascript:show({$task->id});">{$task->name}</a>
+		<a href="javascript:Show({$task->id});">{$task->name}</a>
 	{/foreach}
 	{/strip}
 </td>
@@ -211,10 +210,10 @@ function DeleteWorktime(worktimeId) {
 			disabled="true"
 		/>
 	</td>
-	<td align="center" class="start" onClick="start({$task->id})">
+	<td align="center" class="start" onClick="Start({$task->id})">
 		Start
 	</td>
-	<td align="center" class="stop" onClick="stop({$task->id})">
+	<td align="center" class="stop" onClick="Stop()">
 		Stop
 	</td>
 	<td align="center" class="manage">

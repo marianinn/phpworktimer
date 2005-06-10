@@ -1,17 +1,35 @@
 <?php
 class Worktime {
 	var $id;
-	var $task;
-	var $start_time;
-	var $end_time;
+	var $taskId;
+	var $startTime;
+	var $stopTime;
+	var $duration;
 	
-	var $_dbc;
+	function Worktime($assocWorktime) {
+		$this->id = $assocWorktime['id']; 
+		$this->taskId = $assocWorktime['task']; 
+		$this->startTime = $assocWorktime['start_time']; 
+		$this->stopTime = $assocWorktime['stop_time']; 
+		$this->duration = $assocWorktime['duration']; 
+	}
 	
-	function Worktime($id, $task, $start_time, $end_time) {
-		$this->id = $id; 
-		$this->task = $task; 
-		$this->start_time = $start_time; 
-		$this->end_time = $end_time; 
+	function Stop() {
+		pg_query("BEGIN");
+		pg_query("
+			UPDATE worktime
+			SET stop_time = 'now'
+			WHERE id = $this->id
+		");
+		$rs = pg_query("
+			SELECT
+				stop_time,
+				stop_time - start_time AS duration
+			FROM worktime
+			WHERE id = $this->id
+		");
+		list($this->stopTime, $this->duration) = pg_fetch_row($rs); 
+		pg_query("COMMIT");
 	}
 }
 
