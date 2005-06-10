@@ -1,7 +1,7 @@
-* hide 'Stop' and 'Start' buttons when they aren't needed
+* stick some simple tests
+* add SESSION[hit_hash] for uniqueness of the hits 
 * editing worktimes
 * split GET and POST
-* remove .htaccess by using ?mode
 
 
 * checks on DB (eg end_time > start_time)
