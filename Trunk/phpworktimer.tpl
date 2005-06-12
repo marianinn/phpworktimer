@@ -196,7 +196,7 @@ function DeleteWorktime(worktimeId) {
 <table
 	cellspacing="0"
 	cellpadding="0"
-	style="width:31em;"
+	style="width:32em;"
 >
 <tr>
 <td align="center" id="Head">
