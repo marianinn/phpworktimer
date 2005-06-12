@@ -1,8 +1,4 @@
 <?php
-
-$phpworktimer = new phpworktimer();
-$phpworktimer->main();
-
 class phpworktimer {
 	var $headTaskId;
 	var $taskManager;

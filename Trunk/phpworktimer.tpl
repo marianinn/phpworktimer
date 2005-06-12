@@ -120,10 +120,10 @@ input.start_time {
 
 </head>
 <body>
-<form action="" name="relocator" method="get">
+<form action="index.php" name="relocator" method="get">
 	<input type="hidden" name="headTaskId" value="{$taskManager->headTaskId}" />
-	<input type="hidden" name="action" value="" disabled="1"/>
-	<input type="hidden" name="taskId" value="" disabled="1"/>
+	<input type="hidden" name="action" value="" disabled="1" />
+	<input type="hidden" name="taskId" value="" disabled="1" />
 </form>
 <script type="text/javascript">
 {if not $taskManager->headTaskId}
@@ -132,8 +132,13 @@ document.relocator.headTaskId.disabled = true;
 
 {literal}
 function Show(headTaskId) {
-	document.relocator.headTaskId = headTaskId;
-	document.relocator.headTaskId.disabled = fasle;
+	if (headTaskId) { 
+		document.relocator.headTaskId.value = headTaskId;
+		document.relocator.headTaskId.disabled = false;
+	}
+	else {
+		document.relocator.headTaskId.disabled = true;
+	}
 	document.relocator.submit();
 }
 function Start(taskId) {
@@ -191,11 +196,12 @@ function DeleteWorktime(worktimeId) {
 <table
 	cellspacing="0"
 	cellpadding="0"
+	style="width:31em;"
 >
 <tr>
 <td align="center" id="Head">
 	{strip}
-	<a href="show.php">Head</a>
+	<a href="javascript:Show();">Head</a>
 
 	{foreach from=$taskManager->path item=task}
 		/
