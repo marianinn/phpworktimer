@@ -7,7 +7,7 @@ class Task {
 	var $cost;
 	var $activeWorktimeId;
 	var $worktimes;
-	
+
 	function Task($assocTask) {
 		$this->id = $assocTask['id'];
 		$this->name = $assocTask['name'];
@@ -15,12 +15,12 @@ class Task {
 		$this->parentTaskId = isset($assocTask['parent']) ? $assocTask['parent'] : NULL;
 		$this->worktimes = array();
 		$this->activeWorktimeId = NULL;
-		
+
 		if ($this->total) {
 			$this->_CountCost();
 		}
 	}
-	
+
 	function AddWorktime($worktime) {
 		$this->worktimes[$worktime->id] = $worktime;
 		if (!$worktime->stopTime) {
@@ -31,12 +31,26 @@ class Task {
 			$this->activeWorktimeId = $worktime->id;
 		}
 	}
-	
+
+	function Rename($name) {
+		if (!$name) {
+			return 'Exception: empty taskName';
+		}
+
+		$db = &$this->_getDb();
+		$db->query("
+			UPDATE task
+			SET name = '$name'
+			WHERE id = $this->id
+		");
+		$this->name = $name;
+	}
+
 	function Start() {
 		if ($this->activeWorktimeId) {
 			return 'Exception: already started';
 		}
-		
+
 		$db = &$this->_getDb();
 		$db->query("
 			INSERT INTO worktime(task, start_time)
@@ -48,21 +62,27 @@ class Task {
 			WHERE id = currval('worktime_id_seq');
 		");
 		$worktime = new Worktime($db->fetch_assoc($rs));
-		
+
 		list($this->activeWorktimeId) = $worktime->id;
-		
+
 		$old_worktimes = $this->worktimes;
 		$this->worktimes = array($worktime->id => $worktime);
 		foreach ($old_worktimes as $worktime) {
 			$this->worktimes[$worktime->id] = $worktime;
 		}
 	}
-	
+
 	function Stop() {
-		$this->worktimes[$this->activeWorktimeId]->Stop();
+		if (!$this->activeWorktimeId) {
+			return 'Exception: already stopped';
+		}
+
+		$result = $this->worktimes[$this->activeWorktimeId]->Stop();
 		$this->activeWorktimeId = NULL;
+
+		return $result;
 	}
-	
+
 	/**
 	 * Counts $this->cost and parses $this->total
 	 */
@@ -73,7 +93,7 @@ class Task {
 		}
 		list($hours, $minutes, $seconds) = explode(':', $this->total);
 		$hours += empty($days) ? 0 : $days * 24;
-		
+
 		if ($seconds >= 30) {
 			$minutes++;
 			if ($minutes < 10) {
@@ -87,7 +107,7 @@ class Task {
 		$this->total = (int)$hours . ':' . $minutes;
 		$this->cost = round(4*($hours + $minutes/60), 2);
 	}
-	
+
 	function Delete() {
 		$db = &$this->_getDb();
 		$db->query("
@@ -95,7 +115,7 @@ class Task {
 			WHERE id = $this->id
 		");
 	}
-	
+
 	function &_getDb() {
 		return new DB;
 	}

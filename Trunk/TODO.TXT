@@ -1,7 +1,8 @@
-* stick some simple tests
-* add SESSION[hit_hash] for uniqueness of the hits 
+Features:
+* script to import data
 * editing worktimes
-* split GET and POST
 
-
+Code:
+* rename all names to java-like in DB
+* stick more simple tests
 * checks on DB (eg end_time > start_time)
