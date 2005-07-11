@@ -15,21 +15,29 @@ class Worktime {
 	}
 	
 	function Stop() {
-		pg_query("BEGIN");
-		pg_query("
+		$db = &$this->_getDB();
+
+		$db->query("BEGIN");
+		$db->query("
 			UPDATE worktime
 			SET stop_time = 'now'
 			WHERE id = $this->id
 		");
-		$rs = pg_query("
+		
+		// Refresh $this
+		$rs = $db->query("
 			SELECT
 				stop_time,
 				stop_time - start_time AS duration
 			FROM worktime
 			WHERE id = $this->id
 		");
-		list($this->stopTime, $this->duration) = pg_fetch_row($rs); 
-		pg_query("COMMIT");
+		list($this->stopTime, $this->duration) = $db->fetch_row($rs); 
+		$db->query("COMMIT");
+	}
+	
+	function &_getDB() {
+		return new DB;
 	}
 }
 

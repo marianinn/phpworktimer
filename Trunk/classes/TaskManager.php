@@ -15,15 +15,17 @@ class TaskManager {
 		if ($this->activeTaskId) {
 			return false;
 		}
-		$this->tasks[$taskId]->Start();
 		$this->activeTaskId = $taskId;
+		return $this->tasks[$taskId]->Start();
 	}
 	
 	function Stop() {
 		if (!$this->activeTaskId) {
-			return false;
+			return 'Exception: already active';
 		}
-		$this->tasks[$this->activeTaskId]->Stop();
+		if ($result = $this->tasks[$this->activeTaskId]->Stop()) {
+			return $result;
+		}
 		$this->activeTaskId = NULL;
 	}
 	
@@ -33,7 +35,9 @@ class TaskManager {
 	}
 	
 	function FillTasks() {
-		$rs = pg_query("
+		$db = &$this->_getDb();
+		
+		$rs = $db->query("
 			SELECT
 				task.id,
 				name,
@@ -44,14 +48,14 @@ class TaskManager {
 			GROUP BY task.id, name
 			ORDER BY id DESC
 		");
-		while ($assocTask = pg_fetch_assoc($rs)) {
+		while ($assocTask = $db->fetch_assoc($rs)) {
 			$task = new Task($assocTask);
 			$this->tasks[$task->id] = $task;
 		}
 		
 		
 		// Filling worktimes for each task
-		$rs = pg_query("
+		$rs = $db->query("
 			SELECT
 				worktime.id AS id,
 				task,
@@ -61,9 +65,9 @@ class TaskManager {
 			FROM worktime
 				INNER JOIN task ON task.id = worktime.task
 			WHERE parent ".($this->headTaskId ? " = $this->headTaskId" : "IS NULL")."
-			ORDER BY stop_time DESC
+			ORDER BY id DESC
 		");
-		while ($assocWorktime = pg_fetch_assoc($rs)) {
+		while ($assocWorktime = $db->fetch_assoc($rs)) {
 			$worktime = new Worktime($assocWorktime);
 	
 			$this->tasks[$worktime->taskId]->AddWorktime($worktime);
@@ -75,19 +79,24 @@ class TaskManager {
 	}
 	
 	function _SetPath() {
+		$db = $this->_getDb();
 		$parentTaskId = $this->headTaskId;
 		while ($parentTaskId != NULL && count($this->path) <= 3) {
-			$rs = pg_query("
+			$rs = $db->query("
 				SELECT id, name, parent
 				FROM task
 				WHERE id = $parentTaskId
 			");
 	
-			$task = new Task(pg_fetch_assoc($rs));
+			$task = new Task($db->fetch_assoc($rs));
 			$this->path[] = $task;
 			$parentTaskId = $task->parentTaskId;
 		}
 		$this->path = array_reverse($this->path);
+	}
+	
+	function &_getDb() {
+		return new DB;
 	}
 }
 ?>

@@ -14,19 +14,11 @@ class phpworktimer {
 	}
 	
 	function _Init() {
-		define('ROOT_DIR', $_SERVER['DOCUMENT_ROOT'].'/phpworktimer');
-		define('DB_CONNECTION_STRING', 'host=localhost port=5432 user=uzver dbname=phpworktimer password=nlu');
-		
 		require('/program files/apache group/apache/php/include/smarty/Smarty.class.php');
+		require('classes/DB.php');
 		require('classes/TaskManager.php');
 		require('classes/Task.php');
 		require('classes/Worktime.php');
-		
-		$DBH = pg_connect(DB_CONNECTION_STRING);
-		if (!is_resource($DBH) || pg_connection_status($DBH) != PGSQL_CONNECTION_OK)
-		{
-			exit(); // Error or notice has been shown
-		}
 		
 		session_start();
 	}
@@ -76,8 +68,8 @@ class phpworktimer {
 	
 	function _Output() {
 		$tpl = new Smarty;
-		$tpl->template_dir = ROOT_DIR;
-		$tpl->compile_dir = ROOT_DIR;
+		$tpl->template_dir = dirname(__FILE__);
+		$tpl->compile_dir = dirname(__FILE__);
 		$tpl->assign('taskManager', $this->taskManager);
 		$tpl->display('phpworktimer.tpl');
 	}
