@@ -161,32 +161,12 @@ td.emptyMsg {
 <body>
 <script type="text/javascript">
 {literal}
-/**
- * Submits form with data specified.
- */
-function Submit(action, taskId, taskName, headTaskId, worktimeId) {
-	if (action != null) {
-		document.theForm.action.disabled = false;
-		document.theForm.action.value = action;
-	}
-	if (taskId != null) {
-		document.theForm.taskId.disabled = false;
-		document.theForm.taskId.value = taskId;
-	}
-	if (taskName != null) {
-		document.theForm.taskName.disabled = false;
-		document.theForm.taskName.value = taskName;
-	}
-	if (headTaskId != null) {
-		document.theForm.headTaskId.value = headTaskId;
-	}
-	if (worktimeId != null) {
-		document.theForm.worktimeId.disabled = false;
-		document.theForm.worktimeId.value = worktimeId;
-	}
 
-	document.theForm.submit();
-}
+var renamedTaskId = null;
+var renamedTaskOldName = null;
+var editedWorktimeId = null;
+var editedWorktimeOldStartTime = null;
+var editedWorktimeOldStopTime = null;
 
 /**
 Sends request to create new task.
@@ -277,8 +257,11 @@ function EditWorktime(worktimeId) {
  * Makes possible to edit task.
  */
 function ToggleRenameTask(taskId) {
-	document.getElementById('spanTaskName'   + taskId).style.display = 'none';
+	document.getElementById('spanTaskName' + taskId).style.display = 'none';
 	document.getElementById('textTaskName' + taskId).style.display = 'inline';
+
+	renamedTaskId = taskId;
+	renamedTaskOldName = document.getElementById('textTaskName' + taskId).value;
 }
 
 /**
@@ -289,7 +272,41 @@ function ToggleEditWorktime(worktimeId) {
 	document.getElementById('textWorktimeStartTime' + worktimeId).style.display = 'inline';
 	document.getElementById('spanWorktimeStopTime' + worktimeId).style.display = 'none';
 	document.getElementById('textWorktimeStopTime' + worktimeId).style.display = 'inline';
+
+	editedWorktimeId = worktimeId;
+	editedWorktimeOldStartTime = document.getElementById('textWorktimeStartTime' + worktimeId).value;
+	editedWorktimeOldStopTime = document.getElementById('textWorktimeStopTime' + worktimeId).value;
 }
+
+
+/**
+Cancels all editing toggles.
+*/
+function CancelEditing() {
+	if (renamedTaskId != null) {
+		document.getElementById('textTaskName' + renamedTaskId).value = renamedTaskOldName;
+
+		document.getElementById('spanTaskName' + renamedTaskId).style.display = 'inline';
+		document.getElementById('textTaskName' + renamedTaskId).style.display = 'none';
+	}
+
+	if (editedWorktimeId != null) {
+		document.getElementById('textWorktimeStartTime' + editedWorktimeId).value = editedWorktimeOldStartTime;
+		document.getElementById('textWorktimeStopTime' + editedWorktimeId).value = editedWorktimeOldStopTime;
+		document.getElementById('spanWorktimeStartTime' + editedWorktimeId).style.display = 'inline';
+		document.getElementById('textWorktimeStartTime' + editedWorktimeId).style.display = 'none';
+		document.getElementById('spanWorktimeStopTime' + editedWorktimeId).style.display = 'inline';
+		document.getElementById('textWorktimeStopTime' + editedWorktimeId).style.display = 'none';
+	}
+}
+
+function MyOnKeyPress(e) {
+	if (e.keyCode == 27) {
+		CancelEditing();
+	}
+}
+
+window.onkeypress = MyOnKeyPress;
 {/literal}
 </script>
 
@@ -354,14 +371,14 @@ function ToggleEditWorktime(worktimeId) {
 						</td>
 					{/if}
 						<td class="manageTask">
-							{$task->id}
 							<a href="javascript:ToggleRenameTask({$task->id})">
-								Edit
+								Rename
 							</a>
 							<br/>
 							<a href="javascript:DeleteTask({$task->id})">
 								Delete
 							</a>
+							{$task->id}
 						</td>
 					</tr>
 				</table>
