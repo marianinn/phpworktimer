@@ -7,7 +7,7 @@ class TaskManager {
 
 	function TaskManager($headTaskId) {
 		$this->headTaskId = $headTaskId;
-		$this->FillTasks();
+		$this->_FillTasks();
 		$this->_SetPath();
 	}
 
@@ -58,7 +58,7 @@ class TaskManager {
 
 	function Stop() {
 		if (!$this->activeTaskId) {
-			return 'Exception: already active';
+			return 'Exception: there isn\'t any active task';
 		}
 		if ($result = $this->tasks[$this->activeTaskId]->Stop()) {
 			return $result;
@@ -76,8 +76,43 @@ class TaskManager {
 		}
 	}
 
-	function FillTasks() {
+	function EditWorktime($worktimeId, $worktimeStartTime, $worktimeStopTime) {
+		if (!preg_match('/^[1-9][0-9]*$/', $worktimeId)) {
+			return 'Exception: bad worktimeId';
+		}
+		if (!preg_match('/^20[0-9]{2}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$/',
+			$worktimeStartTime)
+		) {
+			return 'Exception: bad worktimeStartTime';
+		}
+		if (!preg_match('/^20[0-9]{2}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$/',
+			$worktimeStopTime)
+		) {
+			return 'Exception: bad worktimeStopTime';
+		}
+
+		if ($worktimeStartTime >= $worktimeStopTime)
+		{
+			return 'Exception: worktimeStopTime is not greater than worktimeStartTime';
+		}
+
 		$db = &$this->_getDb();
+
+		// Fetch all tasks
+		$rs = $db->query("
+			UPDATE worktime
+			SET start_time = '$worktimeStartTime', stop_time = '$worktimeStopTime'
+			WHERE id = $worktimeId
+		");
+
+		$this->_FillTasks();
+	}
+
+	function _FillTasks() {
+		$db = &$this->_getDb();
+
+		$this->tasks = array();
+		$this->activeTaskId = NULL;
 
 		// Fetch all tasks
 		$rs = $db->query("
@@ -91,6 +126,7 @@ class TaskManager {
 			GROUP BY task.id, name
 			ORDER BY id DESC
 		");
+
 		while ($assocTask = $db->fetch_assoc($rs)) {
 			$task = new Task($assocTask);
 			$this->tasks[$task->id] = $task;
@@ -104,7 +140,9 @@ class TaskManager {
 				task,
 				start_time,
 				stop_time,
-				stop_time - start_time AS duration
+				EXTRACT(day FROM stop_time - start_time)*24
+					+ EXTRACT(hour FROM stop_time - start_time)
+					|| TO_CHAR(stop_time - start_time, ':MI:SS') AS duration
 			FROM worktime
 				INNER JOIN task ON task.id = worktime.task
 			WHERE parent ".($this->headTaskId ? " = $this->headTaskId" : "IS NULL")."
@@ -114,10 +152,17 @@ class TaskManager {
 			$worktime = new Worktime($assocWorktime);
 
 			$this->tasks[$worktime->taskId]->AddWorktime($worktime);
+		}
 
-			if ($this->tasks[$worktime->taskId]->activeWorktimeId) {
-				$this->activeTaskId = $this->tasks[$worktime->taskId]->id;
-			}
+		// Get active task
+		$rs = $db->query("
+			SELECT task
+			FROM worktime
+			WHERE stop_time IS NULL
+		");
+
+		if ($db->num_rows($rs)) {
+			list($this->activeTaskId) = $db->fetch_row($rs);
 		}
 	}
 

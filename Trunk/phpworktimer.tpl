@@ -28,6 +28,11 @@ a:hover {
 	text-decoration: underline;
 }
 
+div.errorMsg {
+	color: red;
+	text-align: center;
+}
+
 table#tableMain {
 	width: 40em;
 }
@@ -50,16 +55,13 @@ input#textAddTask {
 td.task {
 	padding: 0 0 1em 0;
 }
-td.activeTask {
-	border: 3px #77d solid;
+table.taskCaption {
+	border: 1px #777 solid;
 }
 td.taskName {
-	background-color: #eef;
 	padding-left: 1em;
 	font-weight: bold;
-}
-td.taskName:hover {
-	background-color: #ddd;
+	text-align: left;
 }
 input.textTaskName {
 	display: none;
@@ -68,15 +70,16 @@ input.textTaskName {
 	font-size: 1em;
 	height: 1.5em;
 }
-
-
-td.startTask, td.stopTask {
+td.showTask, td.startTask, td.stopTask {
 	width: 7em;
 	text-align: center;
 	font-weight: bold;
 }
-td.startTask:hover, td.stopTask:hover {
+td.showTask:hover, td.startTask:hover, td.stopTask:hover {
 	background-color: #ddd;
+}
+td.showTask {
+	background-color: #eef;
 }
 td.startTask {
 	background-color: #efe;
@@ -91,6 +94,9 @@ td.manageTask {
 	background-color: #ddf;
 }
 
+tr.worktime {
+	height: 1.5em;
+}
 tr.worktimeEven {
 	background-color: #f3f3f3;
 }
@@ -104,13 +110,16 @@ td.worktimeStartTimeActive{
 td.worktimeStartTime{
 	color: #050;
 	text-align: center;
+	width: 12em;
 }
 td.worktimeStopTime{
 	color: #800;
 	text-align: center;
+	width: 12em;
 }
 td.worktimeDuration {
 	text-align: center;
+	width: 8em;
 }
 td.worktimeManage {
 	font-size: .5em;
@@ -119,10 +128,27 @@ td.worktimeManage {
 	line-height: 1em;
 	text-align: right;
 }
+input.worktimeStartTime, input.worktimeStopTime {
+	display: none;
+	font-family: 'verdana';
+	font-size: 1em;
+}
+input.worktimeStartTime {
+	color: #050;
+}
+input.worktimeStopTime {
+	color: #800;
+}
 div.taskTotal {
 	text-align: right;
 	font-size: 1em;
 	font-weight: bold;
+}
+
+td.emptyMsg {
+	padding-top: 1em;
+	font-weight: bold;
+	text-align: center;
 }
 {/literal}
 </style>
@@ -138,7 +164,7 @@ div.taskTotal {
 /**
  * Submits form with data specified.
  */
-function Submit(action, taskId, taskName, headTaskId) {
+function Submit(action, taskId, taskName, headTaskId, worktimeId) {
 	if (action != null) {
 		document.theForm.action.disabled = false;
 		document.theForm.action.value = action;
@@ -152,50 +178,143 @@ function Submit(action, taskId, taskName, headTaskId) {
 		document.theForm.taskName.value = taskName;
 	}
 	if (headTaskId != null) {
-		document.theForm.headTaskId.disabled = false;
 		document.theForm.headTaskId.value = headTaskId;
+	}
+	if (worktimeId != null) {
+		document.theForm.worktimeId.disabled = false;
+		document.theForm.worktimeId.value = worktimeId;
 	}
 
 	document.theForm.submit();
 }
 
 /**
- * Makes possible to edit task.
- */
-function EditTask(taskId) {
-	document.getElementById('spanTaskName'   + taskId).style.display = 'none';
-	document.getElementById('textTaskName' + taskId).style.display = 'inline';
-	document.getElementById('textTaskName' + taskId).focus();
-	document.getElementById('textTaskName' + taskId).select();
+Sends request to create new task.
+*/
+function AddTask(taskName) {
+	document.theForm.action.disabled = false;
+	document.theForm.action.value = 'add';
+	document.theForm.taskName.disabled = false;
+	document.theForm.taskName.value = taskName;
+	document.theForm.submit();
 }
 
 /**
- * Confirms deleting task.
- */
-function DeleteTask(taskId, taskName) {
-	if (window.confirm('Do you really want to delete task \'' + taskName + '\'?'))
-	{
-		Submit('delete', taskId);
+Changes current headTaskId.
+*/
+function ShowTask(taskId) {
+	if (taskId != null) {
+		document.theForm.headTaskId.value = taskId;
 	}
+	else {
+		document.theForm.headTaskId.disabled = true;
+	}
+	document.theForm.submit();
+}
+/**
+Sends request to rename task.
+*/
+function RenameTask(taskId, newTaskName) {
+	document.theForm.action.disabled = false;
+	document.theForm.action.value = 'rename';
+	document.theForm.taskId.disabled = false;
+	document.theForm.taskId.value = taskId;
+	document.theForm.taskName.disabled = false;
+	document.theForm.taskName.value = newTaskName;
+	document.theForm.submit();
+}
+
+/**
+Sends request to delete task.
+*/
+function DeleteTask(taskId) {
+	if (window.confirm('Are you serious?'))
+	{
+		document.theForm.action.disabled = false;
+		document.theForm.action.value = 'delete';
+		document.theForm.taskId.disabled = false;
+		document.theForm.taskId.value = taskId;
+		document.theForm.submit();
+	}
+}
+
+/**
+Sends request to delete task.
+*/
+function StartTask(taskId) {
+	document.theForm.action.disabled = false;
+	document.theForm.action.value = 'start';
+	document.theForm.taskId.disabled = false;
+	document.theForm.taskId.value = taskId;
+	document.theForm.submit();
+}
+
+/**
+Sends request to delete task.
+*/
+function StopTask() {
+	document.theForm.action.disabled = false;
+	document.theForm.action.value = 'stop';
+	document.theForm.submit();
+}
+
+/**
+Sends request to edit worktime.
+*/
+function EditWorktime(worktimeId) {
+	document.theForm.action.disabled = false;
+	document.theForm.action.value = 'editWorktime';
+	document.theForm.worktimeId.disabled = false;
+	document.theForm.worktimeId.value = worktimeId;
+	document.theForm.worktimeStartTime.disabled = false;
+	document.theForm.worktimeStartTime.value = document.getElementById('textWorktimeStartTime'+worktimeId).value;
+	document.theForm.worktimeStopTime.disabled = false;
+	document.theForm.worktimeStopTime.value = document.getElementById('textWorktimeStopTime'+worktimeId).value;
+	document.theForm.submit();
+}
+
+/**
+ * Makes possible to edit task.
+ */
+function ToggleRenameTask(taskId) {
+	document.getElementById('spanTaskName'   + taskId).style.display = 'none';
+	document.getElementById('textTaskName' + taskId).style.display = 'inline';
+}
+
+/**
+ * Makes possible to edit worktime.
+ */
+function ToggleEditWorktime(worktimeId) {
+	document.getElementById('spanWorktimeStartTime' + worktimeId).style.display = 'none';
+	document.getElementById('textWorktimeStartTime' + worktimeId).style.display = 'inline';
+	document.getElementById('spanWorktimeStopTime' + worktimeId).style.display = 'none';
+	document.getElementById('textWorktimeStopTime' + worktimeId).style.display = 'inline';
 }
 {/literal}
 </script>
 
 <form action="" method="get" name="theForm">
+	<input type="hidden" name="key" value="{$key}" />
 	<input type="hidden" name="headTaskId" value="{$taskManager->headTaskId}" />
 	<input type="hidden" name="action" disabled="1" />
 	<input type="hidden" name="taskId" disabled="1" />
 	<input type="hidden" name="taskName" disabled="1" />
-	<input type="hidden" name="key" value="{$key}" />
+	<input type="hidden" name="worktimeId" disabled="1" />
+	<input type="hidden" name="worktimeStartTime" disabled="1" />
+	<input type="hidden" name="worktimeStopTime" disabled="1" />
 </form>
+
+{if $errorMsg}
+	<div class="errorMsg">{$errorMsg}</div>
+{/if}
 
 <div align="center">
 	<table id="tableMain" cellspacing="0" cellpadding="0">
 		<tr>
 			<td id="tdHead">
-				<a href="javascript:Submit(null, null, null, '');">Head</a>
+				<a href="javascript:ShowTask(null);">Head</a>
 			{foreach from=$taskManager->path item=task}
-				/ <a href="javascript:Submit(null, null, null, {$task->id});">{$task->name}</a>
+				/ <a href="javascript:ShowTask({$task->id});">{$task->name}</a>
 			{/foreach}
 			</td>
 		</tr>
@@ -203,45 +322,44 @@ function DeleteTask(taskId, taskName) {
 			<td id="tdAddTask">
 				<span id="above_input">Add new task</span>
 				<input type="text" id="textAddTask"
-					onKeyPress="if(event.keyCode==13)
-						Submit('add', null, this.value)
-					"
+					onKeyPress="if(event.keyCode==13) AddTask(this.value)"
 				/>
 			</td>
 		</tr>
 
 	{foreach from=$taskManager->tasks item=task}
 		<tr>
-			<td class="task {if $task->activeWorktimeId}activeTask{/if}">
-				<table cellspacing="0" cellpadding="0">
+			<td class="task">
+				<table cellspacing="0" cellpadding="0" class="taskCaption">
 					<tr>
-						<td class="taskName" onClick="Submit(null, null, null, {$task->id})">
+						<td class="taskName">
 							<span id="spanTaskName{$task->id}">
 								{$task->name}
 							</span>
 							<input type="text" id="textTaskName{$task->id}"
 								class="textTaskName" value="{$task->name}"
-								onKeyPress="if(event.keyCode==13)
-									Submit('rename', {$task->id}, this.value)
-								"
+								onKeyPress="if(event.keyCode==13) RenameTask({$task->id}, this.value)"
 							/>
 						</td>
+						<td class="showTask" onClick="ShowTask({$task->id})">
+							Show
+						</td>
 					{if not $taskManager->activeTaskId}
-						<td class="startTask" onClick="Submit('start', {$task->id})">
+						<td class="startTask" onClick="StartTask({$task->id})">
 							Start
 						</td>
 					{elseif $task->activeWorktimeId}
-						<td class="stopTask" onClick="Submit('stop')">
+						<td class="stopTask" onClick="StopTask()">
 							Stop
 						</td>
 					{/if}
 						<td class="manageTask">
 							{$task->id}
-							<a href="javascript:EditTask({$task->id})">
+							<a href="javascript:ToggleRenameTask({$task->id})">
 								Edit
 							</a>
 							<br/>
-							<a href="javascript:DeleteTask({$task->id}, '{$task->name}')">
+							<a href="javascript:DeleteTask({$task->id})">
 								Delete
 							</a>
 						</td>
@@ -250,7 +368,7 @@ function DeleteTask(taskId, taskName) {
 
 				<table cellpadding="0" cellspacing="0">
 				{foreach from=$task->worktimes item=worktime name=worktime}
-					<tr class="
+					<tr class="worktime
 						{if not $worktime->stopTime}worktimeActive{/if}
 						{if $smarty.foreach.worktime.iteration is even}worktimeEven{/if}
 					">
@@ -264,11 +382,19 @@ function DeleteTask(taskId, taskName) {
 						<td></td>
 					{else}
 						<td class="worktimeStartTime">
-							{$worktime->startTime}
+							<span id="spanWorktimeStartTime{$worktime->id}">{$worktime->startTime}</span>
+							<input type="text" id="textWorktimeStartTime{$worktime->id}"
+								class="worktimeStartTime" value="{$worktime->startTime}"
+								onKeyPress="if(event.keyCode==13) EditWorktime({$worktime->id})"
+							/>
 						</td>
 						<td>--</td>
 						<td class="worktimeStopTime">
-							{$worktime->stopTime}
+							<span id="spanWorktimeStopTime{$worktime->id}">{$worktime->stopTime}</span>
+							<input type="text" id="textWorktimeStopTime{$worktime->id}"
+								class="worktimeStopTime" value="{$worktime->stopTime}"
+								onKeyPress="if(event.keyCode==13) EditWorktime({$worktime->id})"
+							/>
 						</td>
 						<td>=</td>
 						<td class="worktimeDuration">
@@ -277,7 +403,7 @@ function DeleteTask(taskId, taskName) {
 					{/if}
 						<td align="center" class="worktimeManage">
 							{$worktime->id}
-							<a href="javascript:EditWorktime({$worktime->id})">Edit</a><br/>
+							<a href="javascript:ToggleEditWorktime({$worktime->id})">Edit</a><br/>
 							<a href="javascript:DeleteWorktime({$worktime->id})">Delete</a>
 						</td>
 					</tr>
@@ -289,6 +415,10 @@ function DeleteTask(taskId, taskName) {
 					</div>
 				{/if}
 			</td>
+		</tr>
+	{foreachelse}
+		<tr>
+			<td class="emptyMsg">This task group is empty.</td>
 		</tr>
 	{/foreach}
 	</table>

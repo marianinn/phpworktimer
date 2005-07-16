@@ -22,7 +22,9 @@ class Task {
 	}
 
 	function AddWorktime($worktime) {
+
 		$this->worktimes[$worktime->id] = $worktime;
+
 		if (!$worktime->stopTime) {
 			if ($this->activeWorktimeId) {
 				// we output error worktime anyway
@@ -105,7 +107,7 @@ class Task {
 			}
 		}
 		$this->total = (int)$hours . ':' . $minutes;
-		$this->cost = round(4*($hours + $minutes/60), 2);
+		$this->cost = round(5*($hours + $minutes/60), 2);
 	}
 
 	function Delete() {

@@ -1,7 +1,7 @@
 <?php
-require('phpworktimer.php');
+require('phpWorktimer.php');
 
-$phpworktimer = new phpworktimer();
-$phpworktimer->main();
+$phpWorktimer = new phpWorktimer();
+$phpWorktimer->main();
 
 ?>

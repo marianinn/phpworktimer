@@ -1,6 +1,6 @@
 Features:
-* script to import data
-* editing worktimes
+* Esc when edit cancels editing
+* Labels (total counters in the place among worktimes)
 
 Code:
 * rename all names to java-like in DB

@@ -21,7 +21,7 @@ class WorktimeTest extends UnitTestCase {
 	function WorktimeTest() {
 		$this->UnitTestCase('Worktime.php');
 	}
-	
+
 	function testConstructor() {
 		$assocWorktime = array(
 			'id' => '1',
@@ -38,7 +38,7 @@ class WorktimeTest extends UnitTestCase {
 			$this->assertEqual($worktime->duration, $assocWorktime['duration']);
 		}
 	}
-	
+
 	function testStop() {
  		$assocWorktime = array(
 			'id' => '1',
@@ -51,26 +51,26 @@ class WorktimeTest extends UnitTestCase {
 			'2005-06-13 13:42:43',
 			'02:00:00',
 		);
-		
+
 		$mockDB = &new MockDB($this);
 		$mockDB->expectMinimumCallCount('query', 2);
 		$mockDB->setReturnValue('fetch_row', $fetchRowRes);
-		
+
 		$mockPartWorktime = &new MockPartWorktime($this);
-		
+
 		$mockPartWorktime->setReturnReference('_getDB', $mockDB);
 		$mockPartWorktime->Worktime($assocWorktime);
-		
+
 		$this->assertIdentical($mockDB, $mockPartWorktime->_getDB());
-		
+
 		$mockPartWorktime->Stop();
-		
+
 		$mockDB->tally();
-		
+
 		if ($this->assertNotNull($mockPartWorktime->stopTime)) {
 			$this->assertEqual($mockPartWorktime->stopTime, $fetchRowRes[0]);
 			$this->assertEqual($mockPartWorktime->duration, $fetchRowRes[1]);
-		}			
+		}
 	}
 }
 

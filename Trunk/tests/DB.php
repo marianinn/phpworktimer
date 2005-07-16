@@ -14,7 +14,7 @@ class DbTest extends UnitTestCase {
 			$this->assertTrue(pg_close($DBH));
 		}
 	}
-	
+
 	function testConnecting2testdb() {
 		$DB_CONNECTION_STRING = 'host=localhost port=5432 user=uzver dbname=test password=nlu';
 		$DBH = pg_connect($DB_CONNECTION_STRING);
@@ -23,7 +23,7 @@ class DbTest extends UnitTestCase {
 			$this->assertTrue(pg_close($DBH));
 		}
 	}
-	
+
 	function testSQLFile() {
 		$file_name = '../phpworktimer.sql';
 		if ($this->assertTrue(file_exists($file_name))) {
@@ -31,15 +31,15 @@ class DbTest extends UnitTestCase {
 			$DBH = pg_connect($DB_CONNECTION_STRING);
 			$sql = explode(';', file_get_contents($file_name));
 			unset($sql[count($sql) - 1]);
-			
+
 			foreach ($sql as $statement) {
-				@pg_query($DBH, $statement);				
+				@pg_query($DBH, $statement);
 			}
-			
+
 			$rs = pg_query($DBH, 'SELECT COUNT(*) FROM task');
 			list($count) = pg_fetch_row($rs);
 			$this->assertTrue($count > 1, 'Count tasks=' . $count . ', must be > 1');
-			
+
 			$rs = pg_query($DBH, 'SELECT COUNT(*) FROM worktime');
 			list($count) = pg_fetch_row($rs);
 			$this->assertTrue($count > 1, 'Count worktimes = ' . $count . ', must be > 1');

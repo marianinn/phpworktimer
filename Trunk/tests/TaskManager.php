@@ -22,10 +22,10 @@ class TaskManagerTest extends UnitTestCase {
 	function TaskManagerTest() {
 		$this->UnitTestCase('TaskManager.php');
 	}
-	
+
 	function testConstructor() {
 	}
-	
+
 	function testStop() {
 	}
 }

@@ -29,26 +29,4 @@ CREATE TABLE worktime (
 );
 CREATE INDEX worktime_task_idx ON worktime(task);
 
-
-INSERT INTO task(name) VALUES('Elgraph');
-INSERT INTO task(name) VALUES('my own');
-INSERT INTO task(name) VALUES('Game');
-INSERT INTO task(name, parent) VALUES('New TL', 1);
-INSERT INTO task(name, parent) VALUES('T1504', 4);
-INSERT INTO task(name, parent) VALUES('T1999', 4);
-INSERT INTO task(name, parent) VALUES('T1504', 5);
-INSERT INTO task(name, parent) VALUES('T1504', 5);
-INSERT INTO task(name, parent) VALUES('comments', 5);
-INSERT INTO task(name, parent) VALUES('chat', 3);
-INSERT INTO task(name, parent) VALUES('log', 3);
-
-INSERT INTO worktime(task, stop_time) VALUES(7, 'now');
-INSERT INTO worktime(task, stop_time) VALUES(7, 'now');
-INSERT INTO worktime(task, stop_time) VALUES(7, 'now');
-INSERT INTO worktime(task, stop_time) VALUES(7, 'now');
-INSERT INTO worktime(task, stop_time) VALUES(7, 'now');
-INSERT INTO worktime(task, stop_time) VALUES(8, 'now');
-INSERT INTO worktime(task, stop_time) VALUES(8, 'now');
-INSERT INTO worktime(task, stop_time) VALUES(8, NULL);
-
 COMMIT;

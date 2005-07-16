@@ -2,22 +2,50 @@
 // Singleton
 class DB {
 	var $dbh;
-	var $def_conn_str = 'host=localhost port=5432 user=uzver dbname=phpworktimer password=nlu';
-
-	function DB($conn_str = NULL) {
+	var $def_connection_str = 'host=localhost port=5432 user=uzver dbname=phpworktimer password=nlu';
+	var $connected_str;
+	
+	function DB($connection_str = NULL) {
 		static $dbh;
-		if (!$dbh) {
-			$this->connect($conn_str);
-			$dbh = $this->dbh;
-		}
+		static $connected_str;
 		$this->dbh = $dbh;
+		$this->connected_str = $connected_str;
+
+		
+		if ($connection_str
+			&& $this->dbh
+			&& $connection_str != $this->connected_str
+		) {
+			$this->close();
+			$dbh = $this->dbh;
+			$connected_str = $this->connected_str;
+		}
+		
+		if (!$this->dbh) {
+			$this->connect($connection_str);
+			$dbh = $this->dbh;
+			$connected_str = $this->connected_str;
+		}
+
+		
+		$this->dbh = $dbh;
+		$this->connected_str = $connected_str;
 	}
 
-	function connect($conn_str = NULL) {
-		$conn_str = $conn_str ? $conn_str : $this->def_conn_str;
-		$this->dbh = pg_connect($conn_str) or die(); // warning was shown
+	function connect($connection_str = NULL) {
+		if (empty($connection_str)) {
+			$connection_str = $this->def_connection_str;
+		}
+		$this->dbh = pg_connect($connection_str) or die(); // warning was shown
+		$this->connected_str = $connection_str;
 	}
 
+	function close() {
+		pg_close($this->dbh) or die(); // warning was shown
+		$this->dbh = NULL;
+		$this->connected_str = NULL;
+	}
+	
 	function query($sql) {
 		return pg_query($this->dbh, $sql);
 	}
