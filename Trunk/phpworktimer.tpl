@@ -205,7 +205,7 @@ function RenameTask(taskId, newTaskName) {
 }
 
 /**
-Sends request to delete task.
+Sends request to delete task after confirmation.
 */
 function DeleteTask(taskId) {
 	if (window.confirm('Are you serious?'))
@@ -251,6 +251,21 @@ function EditWorktime(worktimeId) {
 	document.theForm.worktimeStopTime.disabled = false;
 	document.theForm.worktimeStopTime.value = document.getElementById('textWorktimeStopTime'+worktimeId).value;
 	document.theForm.submit();
+}
+
+
+/**
+Sends request to delete worktime after confirmation.
+*/
+function DeleteWorktime(worktimeId) {
+	if (window.confirm('Are you serious?'))
+	{
+		document.theForm.action.disabled = false;
+		document.theForm.action.value = 'deleteWorktime';
+		document.theForm.worktimeId.disabled = false;
+		document.theForm.worktimeId.value = worktimeId;
+		document.theForm.submit();
+	}
 }
 
 /**

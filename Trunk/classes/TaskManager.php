@@ -4,6 +4,7 @@ class TaskManager {
 	var $activeTaskId;
 	var $tasks = array();
 	var $path = array();
+	var $worktimes = array();
 
 	function TaskManager($headTaskId) {
 		$this->headTaskId = $headTaskId;
@@ -77,35 +78,26 @@ class TaskManager {
 	}
 
 	function EditWorktime($worktimeId, $worktimeStartTime, $worktimeStopTime) {
-		if (!preg_match('/^[1-9][0-9]*$/', $worktimeId)) {
-			return 'Exception: bad worktimeId';
-		}
-		if (!preg_match('/^20[0-9]{2}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$/',
-			$worktimeStartTime)
-		) {
-			return 'Exception: bad worktimeStartTime';
-		}
-		if (!preg_match('/^20[0-9]{2}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$/',
-			$worktimeStopTime)
-		) {
-			return 'Exception: bad worktimeStopTime';
-		}
 
-		if ($worktimeStartTime >= $worktimeStopTime)
-		{
-			return 'Exception: worktimeStopTime is not greater than worktimeStartTime';
+		if (!isset($this->worktimeId2taskId[$worktimeId])) {
+			return 'Exception: invalid worktimeId';
 		}
+		
+		$result = $this->tasks[$this->worktimeId2taskId[$worktimeId]]->worktimes[$worktimeId]->Edit($worktimeStartTime, $worktimeStopTime);
+		$this->tasks[$this->worktimeId2taskId[$worktimeId]]->Refresh();
+		return $result;
+	}
 
-		$db = &$this->_getDb();
-
-		// Fetch all tasks
-		$rs = $db->query("
-			UPDATE worktime
-			SET start_time = '$worktimeStartTime', stop_time = '$worktimeStopTime'
-			WHERE id = $worktimeId
-		");
-
-		$this->_FillTasks();
+	function DeleteWorktime($worktimeId) {
+		if (isset($this->worktimeId2taskId[$worktimeId])) {
+			$this->tasks[$this->worktimeId2taskId[$worktimeId]]->worktimes[$worktimeId]->Delete();
+			unset($this->tasks[$this->worktimeId2taskId[$worktimeId]]->worktimes[$worktimeId]);
+			$this->tasks[$this->worktimeId2taskId[$worktimeId]]->Refresh();
+			unset($this->worktimeId2taskId[$worktimeId]);
+		}
+		else {
+			return 'Exception: invalid worktimeId';
+		}
 	}
 
 	function _FillTasks() {
@@ -119,7 +111,9 @@ class TaskManager {
 			SELECT
 				task.id,
 				name,
-				SUM(stop_time - start_time) AS total
+				EXTRACT(day FROM SUM(stop_time - start_time))*24
+					+ EXTRACT(hour FROM SUM(stop_time - start_time))
+					|| TO_CHAR(SUM(stop_time - start_time), ':MI:SS') AS total
 			FROM task
 				LEFT JOIN worktime ON task.id = worktime.task
 			WHERE parent ".($this->headTaskId ? " = $this->headTaskId" : "IS NULL")."
@@ -152,6 +146,7 @@ class TaskManager {
 			$worktime = new Worktime($assocWorktime);
 
 			$this->tasks[$worktime->taskId]->AddWorktime($worktime);
+			$this->worktimeId2taskId[$worktime->id] = $worktime->taskId; 
 		}
 
 		// Get active task

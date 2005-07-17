@@ -15,10 +15,8 @@ class Task {
 		$this->parentTaskId = isset($assocTask['parent']) ? $assocTask['parent'] : NULL;
 		$this->worktimes = array();
 		$this->activeWorktimeId = NULL;
-
-		if ($this->total) {
-			$this->_CountCost();
-		}
+		
+		$this->_CountCost();
 	}
 
 	function AddWorktime($worktime) {
@@ -35,6 +33,7 @@ class Task {
 	}
 
 	function Rename($name) {
+		$name = trim($name);
 		if (!$name) {
 			return 'Exception: empty taskName';
 		}
@@ -42,10 +41,10 @@ class Task {
 		$db = &$this->_getDb();
 		$db->query("
 			UPDATE task
-			SET name = '$name'
+			SET name = '". pg_escape_string($name) ."'
 			WHERE id = $this->id
 		");
-		$this->name = $name;
+		$this->Refresh();
 	}
 
 	function Start() {
@@ -81,33 +80,9 @@ class Task {
 
 		$result = $this->worktimes[$this->activeWorktimeId]->Stop();
 		$this->activeWorktimeId = NULL;
+		$this->Refresh();
 
 		return $result;
-	}
-
-	/**
-	 * Counts $this->cost and parses $this->total
-	 */
-	function _CountCost() {
-		if (preg_match('/^([0-9]+) day(s)?/', $this->total, $matches)) {
-			$days = $matches[1];
-			$this->total = substr(strrchr($this->total, ' '), 1);
-		}
-		list($hours, $minutes, $seconds) = explode(':', $this->total);
-		$hours += empty($days) ? 0 : $days * 24;
-
-		if ($seconds >= 30) {
-			$minutes++;
-			if ($minutes < 10) {
-				$minutes = '0' . $minutes;
-			}
-			elseif ($minutes == 60) {
-				$minutes = '00';
-				$hours++;
-			}
-		}
-		$this->total = (int)$hours . ':' . $minutes;
-		$this->cost = round(5*($hours + $minutes/60), 2);
 	}
 
 	function Delete() {
@@ -116,6 +91,49 @@ class Task {
 			DELETE FROM task
 			WHERE id = $this->id
 		");
+	}
+	
+	function Refresh() {
+		$db = &$this->_getDb();
+		$rs = $db->query("
+			SELECT
+				name,
+				EXTRACT(day FROM SUM(stop_time - start_time))*24
+					+ EXTRACT(hour FROM SUM(stop_time - start_time))
+					|| TO_CHAR(SUM(stop_time - start_time), ':MI:SS') AS total
+			FROM task
+				LEFT JOIN worktime ON task.id = worktime.task
+			WHERE task.id = $this->id
+			GROUP BY task.id, name
+		");
+		list($this->name, $this->total) = $db->fetch_row($rs);
+		
+		$this->_CountCost();
+	}
+
+	/**
+	 * Counts $this->cost and parses $this->total
+	 */
+	function _CountCost() {
+		if ($this->total) {
+			list($hours, $minutes, $seconds) = explode(':', $this->total);
+	
+			if ($seconds >= 30) {
+				$minutes++;
+				if ($minutes < 10) {
+					$minutes = '0' . $minutes;
+				}
+				elseif ($minutes == 60) {
+					$minutes = '00';
+					$hours++;
+				}
+			}
+			$this->total = (int)$hours . ':' . $minutes;
+			$this->cost = round(5*($hours + $minutes/60), 2);
+		}
+		else {
+			$this->cost = NULL;
+		}
 	}
 
 	function &_getDb() {

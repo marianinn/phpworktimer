@@ -10,9 +10,7 @@ require_once('Task.php');
 
 class ClassesTest extends GroupTest {
 	function ClassesTest() {
-		$this->GroupTest('Class tests');
-		$DB_CONNECTION_STRING = 'host=localhost port=5432 user=uzver dbname=test password=nlu';
-		$DBH = pg_connect($DB_CONNECTION_STRING);
+		$this->GroupTest('Classes tests');
 		
 		$this->addTestCase(new WorktimeTest());
 		$this->addTestCase(new TaskTest());

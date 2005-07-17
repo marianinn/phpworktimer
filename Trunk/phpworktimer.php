@@ -36,9 +36,16 @@ class phpWorktimer {
 		if (isset($_GET['action'])) {
 			$this->input['action'] = $_GET['action'];
 
-			if (!in_array(
-				$this->input['action'],
-				array('add', 'rename', 'delete', 'start', 'stop', 'editWorktime')
+			if (!in_array($this->input['action'],
+				array(
+					'add',
+					'rename',
+					'delete',
+					'start',
+					'stop',
+					'editWorktime',
+					'deleteWorktime'
+				)
 			)) {
 				exit('Error: bad GET[action] = ' . $_GET['action']);
 			}
@@ -74,6 +81,14 @@ class phpWorktimer {
 				$this->input['worktimeStartTime'] = $_GET['worktimeStartTime'];
 				$this->input['worktimeStopTime'] = $_GET['worktimeStopTime'];
 			}
+
+			if (in_array($this->input['action'], array('deleteWorktime'))) {
+				if (empty($_GET['worktimeId'])) {
+					exit('Error: empty GET[worktimeId]');
+				}
+
+				$this->input['worktimeId'] = $_GET['worktimeId'];
+			}
 		}
 	}
 
@@ -102,10 +117,12 @@ class phpWorktimer {
 					break;
 				case 'editWorktime':
 					$this->errorMsg = $this->taskManager->EditWorktime(
-						$this->input['worktimeId'],
-						$this->input['worktimeStartTime'],
+						$this->input['worktimeId'], $this->input['worktimeStartTime'],
 						$this->input['worktimeStopTime']
 					);
+					break;
+				case 'deleteWorktime':
+					$this->errorMsg = $this->taskManager->DeleteWorktime($this->input['worktimeId']);
 					break;
 			}
 			$_SESSION['key']++;

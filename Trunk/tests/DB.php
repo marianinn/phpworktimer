@@ -38,11 +38,11 @@ class DbTest extends UnitTestCase {
 
 			$rs = pg_query($DBH, 'SELECT COUNT(*) FROM task');
 			list($count) = pg_fetch_row($rs);
-			$this->assertTrue($count > 1, 'Count tasks=' . $count . ', must be > 1');
+			$this->assertTrue($count == 0, 'Count tasks=' . $count . ', must be == 0');
 
 			$rs = pg_query($DBH, 'SELECT COUNT(*) FROM worktime');
 			list($count) = pg_fetch_row($rs);
-			$this->assertTrue($count > 1, 'Count worktimes = ' . $count . ', must be > 1');
+			$this->assertTrue($count == 0, 'Count worktimes = ' . $count . ', must be == 0');
 		}
 	}
 }

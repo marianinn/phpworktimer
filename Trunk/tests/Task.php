@@ -17,6 +17,11 @@ Mock::generatePartial(
 	'MockPartTask',
 	array('_getDB')
 );
+Mock::generatePartial(
+	'Task',
+	'MockPartTask2',
+	array('_getDB', 'Refresh')
+);
 
 class TaskTest extends UnitTestCase {
 	var $assocTask = array(
@@ -122,13 +127,37 @@ class TaskTest extends UnitTestCase {
 		$task->_CountCost();
 		$this->assertEqual($task->total, '10:00');
 		
-		$task->total = '2 days 23:44:25'; 
+		$task->total = '71:44:25'; 
 		$task->_CountCost();
 		$this->assertEqual($task->total, '71:44');
+	}
+	
+	function testRename() {
+		$mockDB = &new MockDB($this);
+		$mockDB2 = &new MockDB($this);
 		
-		$task->total = '4 days 23:44:30'; 
-		$task->_CountCost();
-		$this->assertEqual($task->total, '119:45');
+		$mockTask = &new MockPartTask2($this);
+		$mockTask->Task($this->assocTask);
+		$mockTask->setReturnReference('_getDB', $mockDB);
+		$mockTask2 = &new MockPartTask2($this);
+		$mockTask2->Task($this->assocTask);
+		$mockTask2->setReturnReference('_getDB', $mockDB2);
+		
+		$mockDB->expectNever('query');
+		$mockTask->expectNever('Refresh');
+		$mockTask->Rename(NULL);
+		$mockTask->Rename(0);
+		$mockTask->Rename(' ');
+		
+		$mockTask2->setReturnReference('_getDB', $mockDB2);
+		$mockDB2->expectOnce('query',
+			array(new WantedPatternExpectation('/^\\s*UPDATE/'))
+		);
+		$mockTask2->expectOnce('Refresh');
+		$mockTask2->Rename('new name');
+		
+		$mockDB2->tally();
+		$mockTask2->tally();
 	}
 	
 	function testDelete() {
