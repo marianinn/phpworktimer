@@ -93,6 +93,20 @@ class Task {
 		");
 	}
 	
+	function DeleteWorktime($worktimeId) {
+		if (isset($this->worktimes[$worktimeId])) {
+			$this->worktimes[$worktimeId]->Delete();
+			unset($this->worktimes[$worktimeId]);
+			if ($worktimeId == $this->activeWorktimeId) {
+				$this->activeWorktimeId = NULL;
+			}
+			$this->Refresh();
+		}
+		else {
+			return 'Exception: invalid worktimeId';
+		}
+	}
+
 	function Refresh() {
 		$db = &$this->_getDb();
 		$rs = $db->query("

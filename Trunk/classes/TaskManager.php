@@ -71,6 +71,9 @@ class TaskManager {
 		if (isset($this->tasks[$taskId])) {
 			$this->tasks[$taskId]->Delete();
 			unset($this->tasks[$taskId]);
+			if ($taskId == $this->activeTaskId) {
+				$this->activeTaskId = NULL;
+			}
 		}
 		else {
 			return 'Exception: invalid taskId';
@@ -90,10 +93,17 @@ class TaskManager {
 
 	function DeleteWorktime($worktimeId) {
 		if (isset($this->worktimeId2taskId[$worktimeId])) {
-			$this->tasks[$this->worktimeId2taskId[$worktimeId]]->worktimes[$worktimeId]->Delete();
-			unset($this->tasks[$this->worktimeId2taskId[$worktimeId]]->worktimes[$worktimeId]);
-			$this->tasks[$this->worktimeId2taskId[$worktimeId]]->Refresh();
+			$taskId = $this->worktimeId2taskId[$worktimeId];
+			
 			unset($this->worktimeId2taskId[$worktimeId]);
+			
+			if ($result = $this->tasks[$taskId]->DeleteWorktime($worktimeId)) {
+				return $result;
+			}
+			
+			if ($this->activeTaskId == $taskId && !$this->tasks[$taskId]->activeWorktimeId) {
+				$this->activeTaskId = NULL;
+			}
 		}
 		else {
 			return 'Exception: invalid worktimeId';

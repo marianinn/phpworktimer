@@ -21,6 +21,11 @@ class phpWorktimer {
 		session_start();
 		if (!isset($_SESSION['key'])) {
 			$_SESSION['key'] = 1;
+
+			// to prevent bug
+			if (isset($_GET['key']) && $_GET['key'] == 1) {
+				$_SESSION['key'] = 2;
+			}
 		}
 	}
 
