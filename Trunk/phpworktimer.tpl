@@ -82,7 +82,7 @@ td.manageTask {
 	background-color: #ddf;
 	padding: 0 1em;
 }
-td.showTask, td.startTask, td.stopTask {
+td.showTask, td.startTask, td.stopTask, td.actionEmpty {
 	text-align: center;
 	font-weight: bold;
 	width: 50%;
@@ -409,7 +409,7 @@ window.onkeypress = MyOnKeyPress;
 							Stop
 						</td>
 					{else}
-						<td></td>
+						<td class="actionEmpty"></td>
 					{/if}
 					</tr>
 				</table>

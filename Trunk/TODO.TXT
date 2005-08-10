@@ -1,3 +1,5 @@
+! deleting parent of active
+
 Features:
 * Labels (total counters in the place among worktimes)
 * Task may contain long popup description.
