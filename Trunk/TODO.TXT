@@ -1,5 +1,9 @@
+! active task after deleting active worktime
+! key must be a random hash
+
 Features:
 * Labels (total counters in the place among worktimes)
+* Task may contain long popup description.
 
 Code:
 * rename all names to java-like in DB

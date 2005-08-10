@@ -15,6 +15,7 @@ body {
 }
 table {
 	width: 100%;
+	border-collapse: collapse;
 }
 form {
 	padding: 0;
@@ -62,6 +63,7 @@ td.taskName {
 	padding-left: 1em;
 	font-weight: bold;
 	text-align: left;
+	border-bottom: 1px gray solid;
 }
 input.textTaskName {
 	display: none;
@@ -70,10 +72,20 @@ input.textTaskName {
 	font-size: 1em;
 	height: 1.5em;
 }
+
+td.taskId {
+	font-size: .6em;
+	padding: 0 1em;
+}
+td.manageTask {
+	font-size: .6em;
+	background-color: #ddf;
+	padding: 0 1em;
+}
 td.showTask, td.startTask, td.stopTask {
-	width: 7em;
 	text-align: center;
 	font-weight: bold;
+	width: 50%;
 }
 td.showTask:hover, td.startTask:hover, td.stopTask:hover {
 	background-color: #ddd;
@@ -88,45 +100,45 @@ td.stopTask {
 	background-color: #fee;
 }
 
-td.manageTask {
-	font-size: .6em;
-	width: 4em;
-	background-color: #ddf;
-}
-
 tr.worktime {
 	height: 1.5em;
+	border: 1px gray dotted;
+}
+td.worktimeManage {
+	font-size: .5em;
+	width: 5em;
+	padding: 0;
+	line-height: 1em;
+	text-align: center;
+}
+td.worktimeId {
+	font-size: .6em;
+	width: 3em;
+	padding: 0;
 }
 tr.worktimeEven {
 	background-color: #f3f3f3;
 }
-tr.worktimeActive{
+tr.worktimeActive {
 	background-color: #fcc;
 }
-td.worktimeStartTimeActive{
+td.worktimeStartTimeActive {
 	font-weight: bold;
 	text-align: center;
 }
-td.worktimeStartTime{
+td.worktimeStartTime {
 	color: #050;
 	text-align: center;
 	width: 12em;
 }
-td.worktimeStopTime{
+td.worktimeStopTime {
 	color: #800;
 	text-align: center;
 	width: 12em;
 }
 td.worktimeDuration {
 	text-align: center;
-	width: 8em;
-}
-td.worktimeManage {
-	font-size: .5em;
-	width: 4em;
-	padding: 0;
-	line-height: 1em;
-	text-align: right;
+	width: 6em;
 }
 input.worktimeStartTime, input.worktimeStopTime {
 	display: none;
@@ -362,9 +374,9 @@ window.onkeypress = MyOnKeyPress;
 	{foreach from=$taskManager->tasks item=task}
 		<tr>
 			<td class="task">
-				<table cellspacing="0" cellpadding="0" class="taskCaption">
+				<table class="taskCaption">
 					<tr>
-						<td class="taskName">
+						<td class="taskName" colspan="4">
 							<span id="spanTaskName{$task->id}">
 								{$task->name}
 							</span>
@@ -372,6 +384,18 @@ window.onkeypress = MyOnKeyPress;
 								class="textTaskName" value="{$task->name}"
 								onKeyPress="if(event.keyCode==13) RenameTask({$task->id}, this.value)"
 							/>
+						</td>
+					</tr>
+					<tr>
+						<td class="taskId">
+							{$task->id}
+						</td>
+						<td class="manageTask">
+							<a href="javascript:ToggleRenameTask({$task->id})">
+								Rename</a><br/>
+							<a href="javascript:DeleteTask({$task->id})">
+								Delete
+							</a>
 						</td>
 						<td class="showTask" onClick="ShowTask({$task->id})">
 							Show
@@ -384,17 +408,9 @@ window.onkeypress = MyOnKeyPress;
 						<td class="stopTask" onClick="StopTask()">
 							Stop
 						</td>
+					{else}
+						<td></td>
 					{/if}
-						<td class="manageTask">
-							<a href="javascript:ToggleRenameTask({$task->id})">
-								Rename
-							</a>
-							<br/>
-							<a href="javascript:DeleteTask({$task->id})">
-								Delete
-							</a>
-							{$task->id}
-						</td>
 					</tr>
 				</table>
 
@@ -404,12 +420,17 @@ window.onkeypress = MyOnKeyPress;
 						{if not $worktime->stopTime}worktimeActive{/if}
 						{if $smarty.foreach.worktime.iteration is even}worktimeEven{/if}
 					">
+						<td class="worktimeId">
+							{$worktime->id}
+						</td>
+						<td class="worktimeManage">
+							<a href="javascript:ToggleEditWorktime({$worktime->id})">Edit</a><br/>
+							<a href="javascript:DeleteWorktime({$worktime->id})">Delete</a>
+						</td>
 					{if not $worktime->stopTime}
-						<td class="worktimeStartTimeActive">
+						<td colspan="3" class="worktimeStartTimeActive">
 							{$worktime->startTime}
 						</td>
-						<td></td>
-						<td></td>
 						<td></td>
 						<td></td>
 					{else}
@@ -433,11 +454,6 @@ window.onkeypress = MyOnKeyPress;
 							{$worktime->duration}
 						</td>
 					{/if}
-						<td align="center" class="worktimeManage">
-							{$worktime->id}
-							<a href="javascript:ToggleEditWorktime({$worktime->id})">Edit</a><br/>
-							<a href="javascript:DeleteWorktime({$worktime->id})">Delete</a>
-						</td>
 					</tr>
 				{/foreach}
 				</table>
