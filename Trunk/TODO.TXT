@@ -1,6 +1,6 @@
-! deleting parent of active
 
 Features:
+* 'Today' 'This Week' statistics
 * Labels (total counters in the place among worktimes)
 * Task may contain long popup description.
 

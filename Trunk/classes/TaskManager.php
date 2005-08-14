@@ -32,17 +32,7 @@ class TaskManager {
 			)
 		");
 
-		// select just created task
-		$rs = $db->query("
-			SELECT
-				id,
-				name,
-				NULL AS total
-			FROM task
-			WHERE id = currval('task_id_seq')
-		");
-
-		array_unshift($this->tasks, new Task($db->fetch_assoc($rs)));
+		$this->_FillTasks();
 	}
 
 	function RenameTask($taskId, $taskName) {
@@ -53,6 +43,10 @@ class TaskManager {
 		if ($this->activeTaskId) {
 			return 'Exception: there is active task already';
 		}
+		if (empty($this->tasks[$taskId])) {
+			return 'Exception: invalid taskId';
+		}
+		
 		$this->activeTaskId = $taskId;
 		return $this->tasks[$taskId]->Start();
 	}
@@ -68,16 +62,13 @@ class TaskManager {
 	}
 
 	function DeleteTask($taskId) {
-		if (isset($this->tasks[$taskId])) {
-			$this->tasks[$taskId]->Delete();
-			unset($this->tasks[$taskId]);
-			if ($taskId == $this->activeTaskId) {
-				$this->activeTaskId = NULL;
-			}
-		}
-		else {
+		if (empty($this->tasks[$taskId])) {
 			return 'Exception: invalid taskId';
 		}
+		
+		$this->tasks[$taskId]->Delete();
+		
+		$this->_FillTasks();
 	}
 
 	function EditWorktime($worktimeId, $worktimeStartTime, $worktimeStopTime) {
@@ -87,27 +78,22 @@ class TaskManager {
 		}
 		
 		$result = $this->tasks[$this->worktimeId2taskId[$worktimeId]]->worktimes[$worktimeId]->Edit($worktimeStartTime, $worktimeStopTime);
-		$this->tasks[$this->worktimeId2taskId[$worktimeId]]->Refresh();
+		
+		$this->_FillTasks();
+		
 		return $result;
 	}
 
 	function DeleteWorktime($worktimeId) {
-		if (isset($this->worktimeId2taskId[$worktimeId])) {
-			$taskId = $this->worktimeId2taskId[$worktimeId];
-			
-			unset($this->worktimeId2taskId[$worktimeId]);
-			
-			if ($result = $this->tasks[$taskId]->DeleteWorktime($worktimeId)) {
-				return $result;
-			}
-			
-			if ($this->activeTaskId == $taskId && !$this->tasks[$taskId]->activeWorktimeId) {
-				$this->activeTaskId = NULL;
-			}
-		}
-		else {
+		if (empty($this->worktimeId2taskId[$worktimeId])) {
 			return 'Exception: invalid worktimeId';
 		}
+		
+		$result = $this->tasks[$this->worktimeId2taskId[$worktimeId]]->DeleteWorktime($worktimeId);
+		
+		$this->_FillTasks();
+		
+		return $result;
 	}
 
 	function _FillTasks() {
