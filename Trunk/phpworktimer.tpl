@@ -53,6 +53,11 @@ input#textAddTask {
 	font-family: 'verdana';
 	font-size: 1em;
 }
+td#tdStatistics {
+	font-weight: bold;
+	text-align: center;
+}
+
 td.task {
 	padding: 0 0 1em 0;
 }
@@ -76,6 +81,7 @@ input.textTaskName {
 td.taskId {
 	font-size: .6em;
 	padding: 0 1em;
+	width: 2em;
 }
 td.manageTask {
 	font-size: .6em;
@@ -85,7 +91,7 @@ td.manageTask {
 td.showTask, td.startTask, td.stopTask, td.actionEmpty {
 	text-align: center;
 	font-weight: bold;
-	width: 50%;
+	width: 16em;
 }
 td.showTask:hover, td.startTask:hover, td.stopTask:hover {
 	background-color: #ddd;
@@ -370,6 +376,20 @@ window.onkeypress = MyOnKeyPress;
 				/>
 			</td>
 		</tr>
+		<tr>
+			<td id="tdStatistics">
+			{if $statistics->today}
+				<span style="margin: 0 2em;">
+					Today: {$statistics->today.time} = {$statistics->today.cost}
+				</span>
+			{/if}
+			{if $statistics->group}
+				<span style="margin: 0 2em;">
+					This Group: {$statistics->group.time} = {$statistics->group.cost}
+				</span>
+			{/if}
+			</td>
+		</tr>
 
 	{foreach from=$taskManager->tasks item=task}
 		<tr>
@@ -459,7 +479,7 @@ window.onkeypress = MyOnKeyPress;
 				</table>
 				{if $task->total}
 					<div class="taskTotal">
-						Total: {$task->total} = ${$task->cost}
+						Total: {$task->total} = {$task->cost}
 					</div>
 				{/if}
 			</td>

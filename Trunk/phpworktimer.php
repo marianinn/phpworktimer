@@ -2,12 +2,15 @@
 class phpWorktimer {
 	var $input;
 	var $errorMsg;
+	var $taskManager;
+	var $statistics;
 
 	function main() {
 		$this->_Init();
 		$this->_Input();
 		$this->taskManager = new TaskManager($this->input['headTaskId']);
 		$this->_Process();
+		$this->statistics = new Statistics($this->input['headTaskId']);
 		$this->_Output();
 	}
 
@@ -17,6 +20,7 @@ class phpWorktimer {
 		require('classes/TaskManager.php');
 		require('classes/Task.php');
 		require('classes/Worktime.php');
+		require('classes/Statistics.php');
 
 		session_start();
 		if (!isset($_SESSION['key'])) {
@@ -139,6 +143,7 @@ class phpWorktimer {
 		$tpl->template_dir = dirname(__FILE__);
 		$tpl->compile_dir = dirname(__FILE__);
 		$tpl->assign('taskManager', $this->taskManager);
+		$tpl->assign('statistics', $this->statistics);
 		$tpl->assign('key', $_SESSION['key']);
 		$tpl->assign('errorMsg', $this->errorMsg);
 		$tpl->display('phpworktimer.tpl');

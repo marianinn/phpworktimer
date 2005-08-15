@@ -44,7 +44,6 @@ class Task {
 			SET name = '". pg_escape_string($name) ."'
 			WHERE id = $this->id
 		");
-		$this->Refresh();
 	}
 
 	function Start() {
@@ -80,7 +79,6 @@ class Task {
 
 		$result = $this->worktimes[$this->activeWorktimeId]->Stop();
 		$this->activeWorktimeId = NULL;
-		$this->Refresh();
 
 		return $result;
 	}
@@ -100,29 +98,10 @@ class Task {
 			if ($worktimeId == $this->activeWorktimeId) {
 				$this->activeWorktimeId = NULL;
 			}
-			$this->Refresh();
 		}
 		else {
 			return 'Exception: invalid worktimeId';
 		}
-	}
-
-	function Refresh() {
-		$db = &$this->_getDb();
-		$rs = $db->query("
-			SELECT
-				name,
-				EXTRACT(day FROM SUM(stop_time - start_time))*24
-					+ EXTRACT(hour FROM SUM(stop_time - start_time))
-					|| TO_CHAR(SUM(stop_time - start_time), ':MI:SS') AS total
-			FROM task
-				LEFT JOIN worktime ON task.id = worktime.task
-			WHERE task.id = $this->id
-			GROUP BY task.id, name
-		");
-		list($this->name, $this->total) = $db->fetch_row($rs);
-		
-		$this->_CountCost();
 	}
 
 	/**
@@ -131,7 +110,7 @@ class Task {
 	function _CountCost() {
 		if ($this->total) {
 			list($hours, $minutes, $seconds) = explode(':', $this->total);
-	
+
 			if ($seconds >= 30) {
 				$minutes++;
 				if ($minutes < 10) {

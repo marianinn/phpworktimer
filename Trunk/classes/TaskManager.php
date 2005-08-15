@@ -36,7 +36,10 @@ class TaskManager {
 	}
 
 	function RenameTask($taskId, $taskName) {
-		return $this->tasks[$taskId]->Rename($taskName);
+		if ($result = $this->tasks[$taskId]->Rename($taskName)) {
+			return $result;
+		}
+		$this->_FillTasks();
 	}
 
 	function StartTask($taskId) {
@@ -58,7 +61,7 @@ class TaskManager {
 		if ($result = $this->tasks[$this->activeTaskId]->Stop()) {
 			return $result;
 		}
-		$this->activeTaskId = NULL;
+		$this->_FillTasks();
 	}
 
 	function DeleteTask($taskId) {
@@ -107,9 +110,7 @@ class TaskManager {
 			SELECT
 				task.id,
 				name,
-				EXTRACT(day FROM SUM(stop_time - start_time))*24
-					+ EXTRACT(hour FROM SUM(stop_time - start_time))
-					|| TO_CHAR(SUM(stop_time - start_time), ':MI:SS') AS total
+				to_hms(SUM(stop_time - start_time)) AS total
 			FROM task
 				LEFT JOIN worktime ON task.id = worktime.task
 			WHERE parent ".($this->headTaskId ? " = $this->headTaskId" : "IS NULL")."
@@ -130,9 +131,7 @@ class TaskManager {
 				task,
 				start_time,
 				stop_time,
-				EXTRACT(day FROM stop_time - start_time)*24
-					+ EXTRACT(hour FROM stop_time - start_time)
-					|| TO_CHAR(stop_time - start_time, ':MI:SS') AS duration
+				to_hms(stop_time - start_time) AS duration
 			FROM worktime
 				INNER JOIN task ON task.id = worktime.task
 			WHERE parent ".($this->headTaskId ? " = $this->headTaskId" : "IS NULL")."
