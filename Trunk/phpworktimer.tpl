@@ -92,6 +92,7 @@ td.showTask, td.startTask, td.stopTask, td.actionEmpty {
 	text-align: center;
 	font-weight: bold;
 	width: 16em;
+	cursor: default;
 }
 td.showTask:hover, td.startTask:hover, td.stopTask:hover {
 	background-color: #ddd;
@@ -121,6 +122,10 @@ td.worktimeId {
 	font-size: .6em;
 	width: 3em;
 	padding: 0;
+	text-align: center;
+}
+td.worktimeDivider {
+	text-align: center;
 }
 tr.worktimeEven {
 	background-color: #f3f3f3;
@@ -201,6 +206,7 @@ function AddTask(taskName) {
 Changes current headTaskId.
 */
 function ShowTask(taskId) {
+	document.theForm.key.disabled = true;
 	if (taskId != null) {
 		document.theForm.headTaskId.value = taskId;
 	}
@@ -461,7 +467,7 @@ window.onkeypress = MyOnKeyPress;
 								onKeyPress="if(event.keyCode==13) EditWorktime({$worktime->id})"
 							/>
 						</td>
-						<td>--</td>
+						<td class="worktimeDivider">--</td>
 						<td class="worktimeStopTime">
 							<span id="spanWorktimeStopTime{$worktime->id}">{$worktime->stopTime}</span>
 							<input type="text" id="textWorktimeStopTime{$worktime->id}"
@@ -469,7 +475,7 @@ window.onkeypress = MyOnKeyPress;
 								onKeyPress="if(event.keyCode==13) EditWorktime({$worktime->id})"
 							/>
 						</td>
-						<td>=</td>
+						<td class="worktimeDivider">=</td>
 						<td class="worktimeDuration">
 							{$worktime->duration}
 						</td>

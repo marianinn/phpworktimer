@@ -17,8 +17,8 @@ class Statistics {
 		$rs = $db->query("
 			SELECT to_hms(SUM(stop_time - start_time)) AS time
 			FROM worktime
-			WHERE EXTRACT(day FROM start_time) = EXTRACT(day FROM 'now'::timestamp)
-				AND EXTRACT(hour FROM start_time) > 8
+			WHERE TO_CHAR(start_time - '7 hours'::interval, 'YYYY-DDD')
+				= TO_CHAR('now'::timestamp - '7 hours'::interval, 'YYYY-DDD')
 		");
 
 		list($time) = $db->fetch_row($rs);
