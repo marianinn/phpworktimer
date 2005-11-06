@@ -1,8 +1,10 @@
 
 Features:
-* Labels (total counters in the place among worktimes)
-* Task may contain long popup description.
 * Changing of DBMS.
+* Textfile DB.
+* Flat worktimes list.
+* Labels (total counters in the place among worktimes).
+* Task may contain long popup description.
 
 Code:
 * rename all names to java-like in DB
