@@ -6,15 +6,19 @@ class Task {
 	var $total;
 	var $cost;
 	var $activeWorktimeId;
+	var $isActive;
 	var $worktimes;
+	var $ascendantTasksIds;
 
-	function Task($assocTask) {
+	function Task($assocTask, $ascendantTasksIds = array()) {
 		$this->id = $assocTask['id'];
 		$this->name = $assocTask['name'];
 		$this->total = isset($assocTask['total']) ? $assocTask['total'] : NULL;
 		$this->parentTaskId = isset($assocTask['parent']) ? $assocTask['parent'] : NULL;
 		$this->worktimes = array();
 		$this->activeWorktimeId = NULL;
+		$this->isActive = FALSE;
+		$this->ascendantTasksIds = $ascendantTasksIds;
 		
 		$this->_CountCost();
 	}
@@ -29,6 +33,7 @@ class Task {
 				return 'Exception: already have active worktime';
 			}
 			$this->activeWorktimeId = $worktime->id;
+			$this->isActive = TRUE;
 		}
 	}
 
@@ -47,7 +52,7 @@ class Task {
 	}
 
 	function Start() {
-		if ($this->activeWorktimeId) {
+		if ($this->isActive) {
 			return 'Exception: already started';
 		}
 
@@ -59,26 +64,37 @@ class Task {
 		$rs = $db->query("
 			SELECT *, stop_time - start_time AS duration
 			FROM worktime
-			WHERE id = currval('worktime_id_seq');
+			WHERE id = currval('worktime_id_seq')
 		");
 		$worktime = new Worktime($db->fetch_assoc($rs));
 
 		list($this->activeWorktimeId) = $worktime->id;
+		$this->isActive = TRUE;
 
 		$old_worktimes = $this->worktimes;
 		$this->worktimes = array($worktime->id => $worktime);
 		foreach ($old_worktimes as $worktime) {
 			$this->worktimes[$worktime->id] = $worktime;
 		}
+		
+		// Update all ascendant tasks.order_time
+		
+		$tasksIds = $this->ascendantTasksIds + array($this->id);
+		$rs = $db->query("
+			UPDATE task
+			SET order_time = 'now'
+			WHERE id IN(".join(', ', $tasksIds).")
+		");
 	}
 
 	function Stop() {
-		if (!$this->activeWorktimeId) {
+		if (!$this->isActive) {
 			return 'Exception: already stopped';
 		}
 
 		$result = $this->worktimes[$this->activeWorktimeId]->Stop();
 		$this->activeWorktimeId = NULL;
+		$this->isActive = FALSE;
 
 		return $result;
 	}
@@ -97,6 +113,7 @@ class Task {
 			unset($this->worktimes[$worktimeId]);
 			if ($worktimeId == $this->activeWorktimeId) {
 				$this->activeWorktimeId = NULL;
+				$this->isActive = FALSE;
 			}
 		}
 		else {

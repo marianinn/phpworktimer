@@ -11,6 +11,7 @@ CREATE TABLE task (
     id INT4 NOT NULL DEFAULT nextval('task_id_seq'),
 	parent INT4,
     name VARCHAR NOT NULL,
+	order_time TIMESTAMP(0) NOT NULL DEFAULT 'now',
 	
     PRIMARY KEY (id),
     FOREIGN KEY (parent) REFERENCES task (id) ON DELETE CASCADE ON UPDATE CASCADE

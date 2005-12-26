@@ -64,11 +64,17 @@ td.task {
 table.taskCaption {
 	border: 1px #777 solid;
 }
+td.taskCaption {
+	padding: 0;
+}
 td.taskName {
 	padding-left: 1em;
 	font-weight: bold;
 	text-align: left;
 	border-bottom: 1px gray solid;
+}
+td.activeTaskName {
+	background-color: #fcc;
 }
 input.textTaskName {
 	display: none;
@@ -402,41 +408,53 @@ window.onkeypress = MyOnKeyPress;
 			<td class="task">
 				<table class="taskCaption">
 					<tr>
-						<td class="taskName" colspan="4">
-							<span id="spanTaskName{$task->id}">
-								{$task->name}
-							</span>
-							<input type="text" id="textTaskName{$task->id}"
-								class="textTaskName" value="{$task->name}"
-								onKeyPress="if(event.keyCode==13) RenameTask({$task->id}, this.value)"
-							/>
+						<td class="taskCaption">
+							<table>
+								<tr>
+									<td class="taskName {if $task->isActive}activeTaskName{/if}">
+										<span id="spanTaskName{$task->id}">
+											{$task->name}
+										</span>
+										<input type="text" id="textTaskName{$task->id}"
+											class="textTaskName" value="{$task->name}"
+											onKeyPress="if(event.keyCode==13) RenameTask({$task->id}, this.value)"
+										/>
+									</td>
+								</tr>
+							</table>
 						</td>
 					</tr>
 					<tr>
-						<td class="taskId">
-							{$task->id}
+						<td class="taskCaption">
+							<table>
+								<tr>
+									<td class="taskId">
+										{$task->id}
+									</td>
+									<td class="manageTask">
+										<a href="javascript:ToggleRenameTask({$task->id})">
+											Rename</a><br/>
+										<a href="javascript:DeleteTask({$task->id})">
+											Delete
+										</a>
+									</td>
+									<td class="showTask" onClick="ShowTask({$task->id})">
+										Show
+									</td>
+								{if not $taskManager->activeTaskId}
+									<td class="startTask" onClick="StartTask({$task->id})">
+										Start
+									</td>
+								{elseif $taskManager->activeTaskId eq $task->id}
+									<td class="stopTask" onClick="StopTask()">
+										Stop
+									</td>
+								{else}
+									<td class="actionEmpty"></td>
+								{/if}
+								</tr>
+							</table>
 						</td>
-						<td class="manageTask">
-							<a href="javascript:ToggleRenameTask({$task->id})">
-								Rename</a><br/>
-							<a href="javascript:DeleteTask({$task->id})">
-								Delete
-							</a>
-						</td>
-						<td class="showTask" onClick="ShowTask({$task->id})">
-							Show
-						</td>
-					{if not $taskManager->activeTaskId}
-						<td class="startTask" onClick="StartTask({$task->id})">
-							Start
-						</td>
-					{elseif $task->activeWorktimeId}
-						<td class="stopTask" onClick="StopTask()">
-							Stop
-						</td>
-					{else}
-						<td class="actionEmpty"></td>
-					{/if}
 					</tr>
 				</table>
 
