@@ -19,7 +19,7 @@ class Task {
 		$this->activeWorktimeId = NULL;
 		$this->isActive = FALSE;
 		$this->ascendantTasksIds = $ascendantTasksIds;
-		
+
 		$this->_CountCost();
 	}
 
@@ -76,10 +76,11 @@ class Task {
 		foreach ($old_worktimes as $worktime) {
 			$this->worktimes[$worktime->id] = $worktime;
 		}
-		
+
+
 		// Update all ascendant tasks.order_time
-		
-		$tasksIds = $this->ascendantTasksIds + array($this->id);
+		$tasksIds = $this->ascendantTasksIds;
+		$tasksIds[] = $this->id;
 		$rs = $db->query("
 			UPDATE task
 			SET order_time = 'now'
@@ -106,7 +107,7 @@ class Task {
 			WHERE id = $this->id
 		");
 	}
-	
+
 	function DeleteWorktime($worktimeId) {
 		if (isset($this->worktimes[$worktimeId])) {
 			$this->worktimes[$worktimeId]->Delete();

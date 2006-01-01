@@ -9,11 +9,11 @@ class TaskManager {
 
 	function TaskManager($headTaskId) {
 		$this->headTaskId = $headTaskId;
+		if ($this->headTaskId) {
+			$this->ascendantTasksIds = $this->_GetAscendantTasksIds($this->headTaskId);
+		}
 		$this->_FillTasks();
 		$this->_Path();
-		if ($this->headTaskId) {
-			$this->_GetAscendantTasksIds($this->headTaskId);
-		}
 	}
 
 	/**
@@ -123,7 +123,7 @@ class TaskManager {
 		");
 
 		while ($assocTask = $db->fetch_assoc($rs)) {
-			$task = new Task($assocTask);
+			$task = new Task($assocTask, array_merge($this->ascendantTasksIds, array($this->headTaskId)));
 			$this->tasks[$task->id] = $task;
 		}
 
@@ -195,7 +195,7 @@ class TaskManager {
 
 	/**
 	 * Finds all ascendant tasks ids.
-	 * @param taskId for which to find ascendant tasks (will be listed also)
+	 * @param taskId for which to find ascendant tasks
 	 * @return array of ids
 	 */
 	function _GetAscendantTasksIds($taskId) {
@@ -210,6 +210,7 @@ class TaskManager {
 			list($ascendantTasksIds[]) = $db->fetch_row($rs);
 		}
 		unset($ascendantTasksIds[$i]);
+		unset($ascendantTasksIds[0]);
 		array_reverse($ascendantTasksIds);
 		return $ascendantTasksIds;
 	}
