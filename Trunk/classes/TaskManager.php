@@ -148,13 +148,16 @@ class TaskManager {
 			$this->worktimeId2taskId[$worktime->id] = $worktime->taskId;
 		}
 
+
+		// Determine active task
 		$this->_activeTaskId();
-		foreach ($this->_GetAscendantTasksIds($this->activeTaskId) as $taskId) {
-			if (in_array($taskId, array_keys($this->tasks))) {
-				$this->tasks[$taskId]->isActive = TRUE;
+		if ($this->activeTaskId) {
+			foreach ($this->_GetAscendantTasksIds($this->activeTaskId) as $taskId) {
+				if (in_array($taskId, array_keys($this->tasks))) {
+					$this->tasks[$taskId]->isActive = TRUE;
+				}
 			}
 		}
-
 	}
 
 	/**
@@ -209,9 +212,11 @@ class TaskManager {
 			");
 			list($ascendantTasksIds[]) = $db->fetch_row($rs);
 		}
+
 		unset($ascendantTasksIds[$i]);
 		unset($ascendantTasksIds[0]);
-		array_reverse($ascendantTasksIds);
+		$ascendantTasksIds = array_reverse($ascendantTasksIds);
+
 		return $ascendantTasksIds;
 	}
 

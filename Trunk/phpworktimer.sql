@@ -8,25 +8,26 @@ BEGIN;
 
 CREATE SEQUENCE task_id_seq START 1;
 CREATE TABLE task (
-    id INT4 NOT NULL DEFAULT nextval('task_id_seq'),
+	id INT4 NOT NULL DEFAULT nextval('task_id_seq'),
 	parent INT4,
-    name VARCHAR NOT NULL,
+	name VARCHAR NOT NULL,
 	order_time TIMESTAMP(0) NOT NULL DEFAULT 'now',
-	
-    PRIMARY KEY (id),
-    FOREIGN KEY (parent) REFERENCES task (id) ON DELETE CASCADE ON UPDATE CASCADE
+
+	PRIMARY KEY (id),
+	FOREIGN KEY (parent) REFERENCES task (id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 CREATE INDEX task_parent_idx ON task(parent);
+CREATE INDEX task_order_time_id_idx ON task(order_time, id);
 
 CREATE SEQUENCE worktime_id_seq;
 CREATE TABLE worktime (
-    id INT4 NOT NULL DEFAULT nextval('worktime_id_seq'),
-    task INT4 NOT NULL,
-    start_time TIMESTAMP(0) NOT NULL DEFAULT 'now',
-    stop_time TIMESTAMP(0),
+	id INT4 NOT NULL DEFAULT nextval('worktime_id_seq'),
+	task INT4 NOT NULL,
+	start_time TIMESTAMP(0) NOT NULL DEFAULT 'now',
+	stop_time TIMESTAMP(0),
 
-    PRIMARY KEY (id),
-    FOREIGN KEY (task) REFERENCES task (id) ON DELETE CASCADE ON UPDATE CASCADE
+	PRIMARY KEY (id),
+	FOREIGN KEY (task) REFERENCES task (id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 CREATE INDEX worktime_task_idx ON worktime(task);
 

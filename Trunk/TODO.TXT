@@ -1,10 +1,13 @@
+Bugs:
+* Edit active worktime causes Javascript error.
+
 
 Features:
-* Changing of DBMS.
-* Textfile DB.
+* Built-in DBMS.
 * Flat worktimes list.
 * Labels (total counters in the place among worktimes).
 * Task may contain long popup description.
+
 
 Code:
 * rename all names to java-like in DB
