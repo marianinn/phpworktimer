@@ -2,16 +2,15 @@
 // Singleton
 class DB {
 	var $dbh;
-	var $def_connection_str = 'host=localhost port=5432 user=uzver dbname=phpworktimer password=nlu';
 	var $connected_str;
-	
+
 	function DB($connection_str = NULL) {
 		static $dbh;
 		static $connected_str;
 		$this->dbh = $dbh;
 		$this->connected_str = $connected_str;
 
-		
+
 		if ($connection_str
 			&& $this->dbh
 			&& $connection_str != $this->connected_str
@@ -20,21 +19,23 @@ class DB {
 			$dbh = $this->dbh;
 			$connected_str = $this->connected_str;
 		}
-		
+
 		if (!$this->dbh) {
 			$this->connect($connection_str);
 			$dbh = $this->dbh;
 			$connected_str = $this->connected_str;
 		}
 
-		
+
 		$this->dbh = $dbh;
 		$this->connected_str = $connected_str;
 	}
 
 	function connect($connection_str = NULL) {
+		global $CFG;
+
 		if (empty($connection_str)) {
-			$connection_str = $this->def_connection_str;
+			$connection_str = $CFG['pg_connection_string'];
 		}
 		$this->dbh = pg_connect($connection_str) or die(); // warning was shown
 		$this->connected_str = $connection_str;
@@ -45,7 +46,7 @@ class DB {
 		$this->dbh = NULL;
 		$this->connected_str = NULL;
 	}
-	
+
 	function query($sql) {
 		return pg_query($this->dbh, $sql);
 	}

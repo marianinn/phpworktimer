@@ -15,12 +15,14 @@ class phpWorktimer {
 	}
 
 	function _Init() {
-		require('/program files/apache group/apache/php/include/smarty/Smarty.class.php');
-		require('classes/DB.php');
-		require('classes/TaskManager.php');
-		require('classes/Task.php');
-		require('classes/Worktime.php');
-		require('classes/Statistics.php');
+		global $CFG;
+
+		require($CFG['smarty_dir'] . '/Smarty.class.php');
+		require($CFG['classes_dir'] . '/DB.php');
+		require($CFG['classes_dir'] . '/TaskManager.php');
+		require($CFG['classes_dir'] . '/Task.php');
+		require($CFG['classes_dir'] . '/Worktime.php');
+		require($CFG['classes_dir'] . '/Statistics.php');
 
 		session_start();
 		if (!isset($_SESSION['key'])) {
@@ -139,14 +141,16 @@ class phpWorktimer {
 	}
 
 	function _Output() {
+		global $CFG;
+
 		$tpl = new Smarty;
-		$tpl->template_dir = dirname(__FILE__);
-		$tpl->compile_dir = dirname(__FILE__);
+		$tpl->template_dir = $CFG['smarty_template_dir'] . '/';
+		$tpl->compile_dir = $CFG['smarty_compile_dir'] . '/';
 		$tpl->assign('taskManager', $this->taskManager);
 		$tpl->assign('statistics', $this->statistics);
 		$tpl->assign('key', $_SESSION['key']);
 		$tpl->assign('errorMsg', $this->errorMsg);
-		$tpl->display('phpworktimer.tpl');
+		$tpl->display($CFG['smarty_template_dir'] . '/phpworktimer.tpl');
 	}
 }
 ?>

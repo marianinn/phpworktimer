@@ -4,7 +4,7 @@ Bugs:
 
 
 Features:
-* Built-in DBMS.
+> Including SQLite.
 * Flat worktimes list.
 * Labels (total counters in the place among worktimes).
 * Task may contain long popup description.
