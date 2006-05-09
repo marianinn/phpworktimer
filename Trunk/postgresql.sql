@@ -10,6 +10,7 @@ CREATE SEQUENCE task_id_seq START 1;
 CREATE TABLE task (
 	id INT4 NOT NULL DEFAULT nextval('task_id_seq'),
 	parent INT4,
+	rate NUMERIC NOT NULL,
 	name VARCHAR NOT NULL,
 	order_time TIMESTAMP(0) NOT NULL DEFAULT ('now'::TEXT)::TIMESTAMP(0),
 

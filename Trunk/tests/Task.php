@@ -80,7 +80,7 @@ class TaskTest extends UnitTestCase {
 		$mockDB->expectArgumentsAt(1, 'query',
 			array(new WantedPatternExpectation('/^\\s*SELECT/'))
 		);
-		$mockDB->setReturnValue('fetch_assoc', $this->assocWorktime);
+		$mockDB->setReturnValue('fetch', $this->assocWorktime);
 
 		$mockTask = &new MockPartTask($this);
 		$mockTask->Task($this->assocTask);
@@ -103,9 +103,10 @@ class TaskTest extends UnitTestCase {
 		$mockWorktime = &new MockWorktime($this);
 		$task->worktimes[1] = &$mockWorktime;
 		$task->activeWorktimeId = 1;
+		$task->isActive = TRUE;
 
 		$mockWorktime->expectOnce('Stop');
-		$task->Stop(1);
+		$task->Stop();
 		$mockWorktime->tally();
 
 		$this->assertNull($task->activeWorktimeId);
@@ -122,17 +123,20 @@ class TaskTest extends UnitTestCase {
 		$task->total = '00:59:31';
 		$task->_CountCost();
 		$this->assertEqual($task->total, '1:00');
+		$this->assertEqual($task->cost, $task->rate);
 
 		$task->total = '09:59:31';
 		$task->_CountCost();
 		$this->assertEqual($task->total, '10:00');
+		$this->assertEqual($task->cost, 10*$task->rate);
 
-		$task->total = '71:44:25';
+		$task->total = '71:45:25';
 		$task->_CountCost();
-		$this->assertEqual($task->total, '71:44');
+		$this->assertEqual($task->total, '71:45');
+		$this->assertEqual($task->cost, 71.75*$task->rate);
 	}
 
-	function testRename() {
+	function testEdit() {
 		$mockDB = &new MockDB($this);
 		$mockDB2 = &new MockDB($this);
 
@@ -144,15 +148,15 @@ class TaskTest extends UnitTestCase {
 		$mockTask2->setReturnReference('_getDB', $mockDB2);
 
 		$mockDB->expectNever('query');
-		$mockTask->Rename(NULL);
-		$mockTask->Rename(0);
-		$mockTask->Rename(' ');
+		$mockTask->Edit('good name', null);
+		$mockTask->Edit(NULL, 1);
+		$mockTask->Edit(' ', 1);
 
 		$mockTask2->setReturnReference('_getDB', $mockDB2);
 		$mockDB2->expectOnce('query',
 			array(new WantedPatternExpectation('/^\\s*UPDATE/'))
 		);
-		$mockTask2->Rename('new name');
+		$mockTask2->Edit('new name', 1);
 
 		$mockDB2->tally();
 		$mockTask2->tally();

@@ -1,70 +1,78 @@
 <?php
-// Singleton
+// Delegates its duties to the $_db field.
 class DB {
-	var $dbh;
-	var $connected_str;
+	var $_db;// static
+	var $_dbh;// static
 
-	function DB($connection_str = NULL) {
-		static $dbh;
-		static $connected_str;
-		$this->dbh = $dbh;
-		$this->connected_str = $connected_str;
+	function DB() {
+		static $db = NULL;
+		static $dbh = NULL;
+		$this->_db = &$db;
+		$this->_dbh = &$dbh;
 
-
-		if ($connection_str
-			&& $this->dbh
-			&& $connection_str != $this->connected_str
-		) {
-			$this->close();
-			$dbh = $this->dbh;
-			$connected_str = $this->connected_str;
+		if ($this->_db === NULL)
+		{
+			$this->_fillDb();
 		}
-
-		if (!$this->dbh) {
-			$this->connect($connection_str);
-			$dbh = $this->dbh;
-			$connected_str = $this->connected_str;
-		}
-
-
-		$this->dbh = $dbh;
-		$this->connected_str = $connected_str;
 	}
 
-	function connect($connection_str = NULL) {
+	function _fillDb() {
 		global $CFG;
 
-		if (empty($connection_str)) {
+		if ($CFG['database_type'] == 'postgresql')
+		{
+			include($CFG['classes_dir'] .'/PgDB.php');
+			$this->_db = new PgDB();
 			$connection_str = $CFG['pg_connection_string'];
 		}
-		$this->dbh = pg_connect($connection_str) or die(); // warning was shown
-		$this->connected_str = $connection_str;
+		elseif ($CFG['database_type'] == 'sqlite')
+		{
+			include($CFG['classes_dir'] .'/SQLiteDB.php');
+			$this->_db = new SQLiteDB();
+			$connection_str = $CFG['sqlite_db_filename'];
+		}
+		else
+		{
+			exit('Error: bad CFG[database_type]');
+		}
+		$this->connect($connection_str);
+	}
+
+	function connect($connection_str) {
+		$this->_dbh = $this->_db->connect($connection_str);
 	}
 
 	function close() {
-		pg_close($this->dbh) or die(); // warning was shown
-		$this->dbh = NULL;
-		$this->connected_str = NULL;
+		$this->_db->close($this->_dbh);
+		$this->_dbh = NULL;
 	}
 
 	function query($sql) {
-		return pg_query($this->dbh, $sql);
+		$rs = $this->_db->query($this->_dbh, $sql);
+		if (!is_resource($rs)) {
+			v();
+			v($sql);
+		}
+		else {
+			return $rs;
+		}
 	}
 
 	function num_rows($rs) {
-		return pg_num_rows($rs);
+		return $this->_db->num_rows($rs);
 	}
 
-	function fetch_row($rs) {
-		return pg_fetch_row($rs);
+	function fetch($rs) {
+		return $this->_db->fetch($rs);
 	}
 
-	function fetch_assoc($rs) {
-		return pg_fetch_assoc($rs);
+	function last_insert_id($table_name, $field_name = 'id')
+	{
+		return $this->_db->last_insert_id($table_name, $field_name = 'id');
 	}
 
 	function escape_string($rs) {
-		return pg_escape_string($rs);
+		return $this->_db->escape_string($rs);
 	}
 }
 ?>

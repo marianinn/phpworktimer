@@ -5,12 +5,15 @@ Bugs:
 
 Features:
 > Including SQLite.
+* Title contains task name.
 * Flat worktimes list.
 * Labels (total counters in the place among worktimes).
 * Task may contain long popup description.
+* Names of levels (First level: 'Job', second: 'project', and so on)
 
 
 Code:
+* what is the exit() call in DB.php
 * rename all names to java-like in DB
 * stick more simple tests
 * checks on DB (eg end_time > start_time)

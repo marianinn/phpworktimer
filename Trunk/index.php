@@ -1,8 +1,11 @@
 <?php
-require('phpWorktimer.php');
+
+error_reporting(E_ALL);
+
+require('phpworktimer.php');
 require('config.php');
 
-$phpWorktimer = new phpWorktimer();
-$phpWorktimer->main();
+$phpworktimer = new phpworktimer();
+$phpworktimer->main();
 
 ?>

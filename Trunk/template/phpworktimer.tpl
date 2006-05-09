@@ -68,12 +68,14 @@ td.taskCaption {
 	padding: 0;
 }
 td.taskName {
+	width: 100%;
+	padding: 0;
 	padding-left: 1em;
 	font-weight: bold;
 	text-align: left;
 	border-bottom: 1px gray solid;
 }
-td.activeTaskName {
+td.activeTaskName, td.activeTaskRate {
 	background-color: #fcc;
 }
 input.textTaskName {
@@ -81,7 +83,20 @@ input.textTaskName {
 	font-weight: bold;
 	font-family: 'verdana';
 	font-size: 1em;
-	height: 1.5em;
+	width: 100%;
+}
+td.taskRate {
+	padding-left: 1em;
+	font-weight: bold;
+	border-bottom: 1px gray solid;
+}
+input.textTaskRate {
+	display: none;
+	width: 2em;
+	font-weight: bold;
+	font-family: 'verdana';
+	font-size: 1em;
+	text-align: right;
 }
 
 td.taskId {
@@ -192,8 +207,9 @@ td.emptyMsg {
 <script type="text/javascript">
 {literal}
 
-var renamedTaskId = null;
-var renamedTaskOldName = null;
+var editedTaskId = null;
+var editedTaskOldName = null;
+var editedTaskOldRate = null;
 var editedWorktimeId = null;
 var editedWorktimeOldStartTime = null;
 var editedWorktimeOldStopTime = null;
@@ -203,14 +219,14 @@ Sends request to create new task.
 */
 function AddTask(taskName) {
 	document.theForm.action.disabled = false;
-	document.theForm.action.value = 'add';
+	document.theForm.action.value = 'addTask';
 	document.theForm.taskName.disabled = false;
 	document.theForm.taskName.value = taskName;
 	document.theForm.submit();
 }
 
 /**
-Changes current headTaskId.
+Changes current headTask.
 */
 function ShowTask(taskId) {
 	document.theForm.key.disabled = true;
@@ -223,15 +239,21 @@ function ShowTask(taskId) {
 	document.theForm.submit();
 }
 /**
-Sends request to rename task.
+Sends request to edit task.
 */
-function RenameTask(taskId, newTaskName) {
+function EditTask(taskId) {
+
+	var newTaskName = document.getElementById('textTaskName' + taskId).value;
+	var newTaskRate = document.getElementById('textTaskRate' + taskId).value;
+
 	document.theForm.action.disabled = false;
-	document.theForm.action.value = 'rename';
+	document.theForm.action.value = 'editTask';
 	document.theForm.taskId.disabled = false;
 	document.theForm.taskId.value = taskId;
 	document.theForm.taskName.disabled = false;
 	document.theForm.taskName.value = newTaskName;
+	document.theForm.taskRate.disabled = false;
+	document.theForm.taskRate.value = newTaskRate;
 	document.theForm.submit();
 }
 
@@ -242,7 +264,7 @@ function DeleteTask(taskId) {
 	if (window.confirm('Are you serious?'))
 	{
 		document.theForm.action.disabled = false;
-		document.theForm.action.value = 'delete';
+		document.theForm.action.value = 'deleteTask';
 		document.theForm.taskId.disabled = false;
 		document.theForm.taskId.value = taskId;
 		document.theForm.submit();
@@ -254,7 +276,7 @@ Sends request to delete task.
 */
 function StartTask(taskId) {
 	document.theForm.action.disabled = false;
-	document.theForm.action.value = 'start';
+	document.theForm.action.value = 'startTask';
 	document.theForm.taskId.disabled = false;
 	document.theForm.taskId.value = taskId;
 	document.theForm.submit();
@@ -263,7 +285,7 @@ function StartTask(taskId) {
 /**
 Sends request to delete task.
 */
-function StopTask() {
+function Stop() {
 	document.theForm.action.disabled = false;
 	document.theForm.action.value = 'stop';
 	document.theForm.submit();
@@ -302,12 +324,15 @@ function DeleteWorktime(worktimeId) {
 /**
  * Makes possible to edit task.
  */
-function ToggleRenameTask(taskId) {
+function ToggleEditTask(taskId) {
 	document.getElementById('spanTaskName' + taskId).style.display = 'none';
 	document.getElementById('textTaskName' + taskId).style.display = 'inline';
+	document.getElementById('spanTaskRate' + taskId).style.display = 'none';
+	document.getElementById('textTaskRate' + taskId).style.display = 'inline';
 
-	renamedTaskId = taskId;
-	renamedTaskOldName = document.getElementById('textTaskName' + taskId).value;
+	editedTaskId = taskId;
+	editedTaskOldName = document.getElementById('textTaskName' + taskId).value;
+	editedTaskOldRate = document.getElementById('textTaskRate' + taskId).value;
 }
 
 /**
@@ -329,11 +354,14 @@ function ToggleEditWorktime(worktimeId) {
 Cancels all editing toggles.
 */
 function CancelEditing() {
-	if (renamedTaskId != null) {
-		document.getElementById('textTaskName' + renamedTaskId).value = renamedTaskOldName;
+	if (editedTaskId != null) {
+		document.getElementById('textTaskName' + editedTaskId).value = editedTaskOldName;
+		document.getElementById('textTaskRate' + editedTaskId).value = editedTaskOldRate;
 
-		document.getElementById('spanTaskName' + renamedTaskId).style.display = 'inline';
-		document.getElementById('textTaskName' + renamedTaskId).style.display = 'none';
+		document.getElementById('spanTaskName' + editedTaskId).style.display = 'inline';
+		document.getElementById('textTaskName' + editedTaskId).style.display = 'none';
+		document.getElementById('spanTaskRate' + editedTaskId).style.display = 'inline';
+		document.getElementById('textTaskRate' + editedTaskId).style.display = 'none';
 	}
 
 	if (editedWorktimeId != null) {
@@ -346,25 +374,26 @@ function CancelEditing() {
 	}
 }
 
-function MyOnKeyPress(e) {
+function Myonkeypress(e) {
 	if (e.keyCode == 27) {
 		CancelEditing();
 	}
 }
 
-window.onkeypress = MyOnKeyPress;
+window.onkeypress = Myonkeypress;
 {/literal}
 </script>
 
 <form action="" method="get" name="theForm">
 	<input type="hidden" name="key" value="{$key}" />
-	<input type="hidden" name="headTaskId" value="{$taskManager->headTaskId}" />
-	<input type="hidden" name="action" disabled="1" />
-	<input type="hidden" name="taskId" disabled="1" />
-	<input type="hidden" name="taskName" disabled="1" />
-	<input type="hidden" name="worktimeId" disabled="1" />
-	<input type="hidden" name="worktimeStartTime" disabled="1" />
-	<input type="hidden" name="worktimeStopTime" disabled="1" />
+	<input type="hidden" name="headTaskId" value="{$taskManager->headTask->id}" />
+	<input type="hidden" name="action" disabled="disabled" />
+	<input type="hidden" name="taskId" disabled="disabled" />
+	<input type="hidden" name="taskName" disabled="disabled" />
+	<input type="hidden" name="taskRate" disabled="disabled" />
+	<input type="hidden" name="worktimeId" disabled="disabled" />
+	<input type="hidden" name="worktimeStartTime" disabled="disabled" />
+	<input type="hidden" name="worktimeStopTime" disabled="disabled" />
 </form>
 
 {if $errorMsg}
@@ -385,7 +414,7 @@ window.onkeypress = MyOnKeyPress;
 			<td id="tdAddTask">
 				<span id="above_input">Add new task</span>
 				<input type="text" id="textAddTask"
-					onKeyPress="if(event.keyCode==13) AddTask(this.value)"
+					onkeypress="if(event.keyCode==13) AddTask(this.value)"
 				/>
 			</td>
 		</tr>
@@ -418,7 +447,16 @@ window.onkeypress = MyOnKeyPress;
 										</span>
 										<input type="text" id="textTaskName{$task->id}"
 											class="textTaskName" value="{$task->name}"
-											onKeyPress="if(event.keyCode==13) RenameTask({$task->id}, this.value)"
+											onkeypress="if(event.keyCode==13) EditTask({$task->id})"
+										/>
+									</td>
+									<td class="taskRate {if $task->isActive}activeTaskRate{/if}">
+										<span id="spanTaskRate{$task->id}">
+											{$task->rate}
+										</span>
+										<input type="text" id="textTaskRate{$task->id}"
+											class="textTaskRate" value="{$task->rate}"
+											onkeypress="if(event.keyCode==13) EditTask({$task->id})"
 										/>
 									</td>
 								</tr>
@@ -433,21 +471,21 @@ window.onkeypress = MyOnKeyPress;
 										{$task->id}
 									</td>
 									<td class="manageTask">
-										<a href="javascript:ToggleRenameTask({$task->id})">
-											Rename</a><br/>
+										<a href="javascript:ToggleEditTask({$task->id})">
+											Edit</a><br/>
 										<a href="javascript:DeleteTask({$task->id})">
 											Delete
 										</a>
 									</td>
-									<td class="showTask" onClick="ShowTask({$task->id})">
+									<td class="showTask" onclick="ShowTask({$task->id})">
 										Show
 									</td>
 								{if not $taskManager->activeTaskId}
-									<td class="startTask" onClick="StartTask({$task->id})">
+									<td class="startTask" onclick="StartTask({$task->id})">
 										Start
 									</td>
 								{elseif $taskManager->activeTaskId eq $task->id}
-									<td class="stopTask" onClick="StopTask()">
+									<td class="stopTask" onclick="Stop()">
 										Stop
 									</td>
 								{else}
@@ -459,6 +497,7 @@ window.onkeypress = MyOnKeyPress;
 					</tr>
 				</table>
 
+			{if $task->worktimes}
 				<table cellpadding="0" cellspacing="0">
 				{foreach from=$task->worktimes item=worktime name=worktime}
 					<tr class="worktime
@@ -483,7 +522,7 @@ window.onkeypress = MyOnKeyPress;
 							<span id="spanWorktimeStartTime{$worktime->id}">{$worktime->startTime}</span>
 							<input type="text" id="textWorktimeStartTime{$worktime->id}"
 								class="worktimeStartTime" value="{$worktime->startTime}"
-								onKeyPress="if(event.keyCode==13) EditWorktime({$worktime->id})"
+								onkeypress="if(event.keyCode==13) EditWorktime({$worktime->id})"
 							/>
 						</td>
 						<td class="worktimeDivider">--</td>
@@ -491,7 +530,7 @@ window.onkeypress = MyOnKeyPress;
 							<span id="spanWorktimeStopTime{$worktime->id}">{$worktime->stopTime}</span>
 							<input type="text" id="textWorktimeStopTime{$worktime->id}"
 								class="worktimeStopTime" value="{$worktime->stopTime}"
-								onKeyPress="if(event.keyCode==13) EditWorktime({$worktime->id})"
+								onkeypress="if(event.keyCode==13) EditWorktime({$worktime->id})"
 							/>
 						</td>
 						<td class="worktimeDivider">=</td>
@@ -507,6 +546,7 @@ window.onkeypress = MyOnKeyPress;
 						Total: {$task->total} = {$task->cost}
 					</div>
 				{/if}
+			{/if}
 			</td>
 		</tr>
 	{foreachelse}

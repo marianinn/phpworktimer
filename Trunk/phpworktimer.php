@@ -1,5 +1,5 @@
 <?php
-class phpWorktimer {
+class phpworktimer {
 	var $input;
 	var $errorMsg;
 	var $taskManager;
@@ -8,7 +8,6 @@ class phpWorktimer {
 	function main() {
 		$this->_Init();
 		$this->_Input();
-		$this->taskManager = new TaskManager($this->input['headTaskId']);
 		$this->_Process();
 		$this->statistics = new Statistics($this->input['headTaskId']);
 		$this->_Output();
@@ -49,10 +48,10 @@ class phpWorktimer {
 
 			if (!in_array($this->input['action'],
 				array(
-					'add',
-					'rename',
-					'delete',
-					'start',
+					'addTask',
+					'editTask',
+					'deleteTask',
+					'startTask',
 					'stop',
 					'editWorktime',
 					'deleteWorktime'
@@ -61,7 +60,9 @@ class phpWorktimer {
 				exit('Error: bad GET[action] = ' . $_GET['action']);
 			}
 
-			if (in_array($this->input['action'], array('add', 'rename'))) {
+			if (in_array($this->input['action'],
+				array('addTask', 'editTask'))
+			) {
 				if (empty($_GET['taskName'])) {
 					exit('Error: empty GET[taskName]');
 				}
@@ -69,7 +70,17 @@ class phpWorktimer {
 				$this->input['taskName'] = $_GET['taskName'];
 			}
 
-			if (in_array($this->input['action'], array('rename', 'delete', 'start'))) {
+			if (in_array($this->input['action'], array('editTask'))) {
+				if (empty($_GET['taskRate'])) {
+					exit('Error: empty GET[taskRate]');
+				}
+
+				$this->input['taskRate'] = $_GET['taskRate'];
+			}
+
+			if (in_array($this->input['action'],
+				array('editTask', 'deleteTask', 'startTask'))
+			) {
 				if (empty($_GET['taskId'])) {
 					exit('Error: empty GET[taskId]');
 				}
@@ -104,23 +115,34 @@ class phpWorktimer {
 	}
 
 	function _Process() {
+		$this->taskManager = new TaskManager();
+
+		if ($this->errorMsg =
+			$this->taskManager->Load($this->input['headTaskId'])
+		)
+		{
+			return;
+		}
+
 		if (isset($this->input['action'])
 			&& isset($_GET['key'])
 			&& $_GET['key'] == $_SESSION['key']
 		) {
 			switch ($this->input['action']) {
-				case 'add':
+				case 'addTask':
 					$this->errorMsg = $this->taskManager->AddTask($this->input['taskName']);
 					break;
-				case 'rename':
-					$this->errorMsg = $this->taskManager->RenameTask(
-						$this->input['taskId'], $this->input['taskName']
+				case 'editTask':
+					$this->errorMsg = $this->taskManager->EditTask(
+						$this->input['taskId'],
+						$this->input['taskName'],
+						$this->input['taskRate']
 					);
 					break;
-				case 'delete':
+				case 'deleteTask':
 					$this->errorMsg = $this->taskManager->DeleteTask($this->input['taskId']);
 					break;
-				case 'start':
+				case 'startTask':
 					$this->errorMsg = $this->taskManager->StartTask($this->input['taskId']);
 					break;
 				case 'stop':

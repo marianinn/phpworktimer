@@ -40,7 +40,7 @@ class WorktimeTest extends UnitTestCase {
 	}
 
 	function testStop() {
- 		$assocWorktime = array(
+		$assocWorktime = array(
 			'id' => '1',
 			'task' => '7',
 			'start_time' => '2005-06-13 13:42:43',
@@ -54,22 +54,40 @@ class WorktimeTest extends UnitTestCase {
 
 		$mockDB = &new MockDB($this);
 		$mockDB->expectMinimumCallCount('query', 2);
-		$mockDB->setReturnValue('fetch_row', $fetchRowRes);
+		$mockDB->setReturnValue('fetch', $fetchRowRes);
 
 		$mockPartWorktime = &new MockPartWorktime($this);
 
 		$mockPartWorktime->setReturnReference('_getDB', $mockDB);
 		$mockPartWorktime->Worktime($assocWorktime);
 
-		$this->assertIdentical($mockDB, $mockPartWorktime->_getDB());
+		$res = $this->assertIdentical($mockDB, $mockPartWorktime->_getDB());
 
-		$mockPartWorktime->Stop();
+		$res = $res && $this->assertIdentical(
+			$mockPartWorktime->id, $assocWorktime['id']
+		);
+		$res = $res && $this->assertIdentical(
+			$mockPartWorktime->taskId, $assocWorktime['task']
+		);
+		$res = $res && $this->assertIdentical(
+			$mockPartWorktime->startTime, $assocWorktime['start_time']
+		);
+		$res = $res && $this->assertIdentical(
+			$mockPartWorktime->stopTime, $assocWorktime['stop_time']
+		);
+		$res = $res && $this->assertIdentical(
+			$mockPartWorktime->duration, $assocWorktime['duration']
+		);
 
-		$mockDB->tally();
+		if ($res) {
+			$mockPartWorktime->Stop();
 
-		if ($this->assertNotNull($mockPartWorktime->stopTime)) {
-			$this->assertEqual($mockPartWorktime->stopTime, $fetchRowRes[0]);
-			$this->assertEqual($mockPartWorktime->duration, $fetchRowRes[1]);
+			$mockDB->tally();
+
+			if ($this->assertNotNull($mockPartWorktime->stopTime)) {
+				$this->assertEqual($mockPartWorktime->stopTime, $fetchRowRes[0]);
+				$this->assertEqual($mockPartWorktime->duration, $fetchRowRes[1]);
+			}
 		}
 	}
 }

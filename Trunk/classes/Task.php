@@ -2,6 +2,7 @@
 class Task {
 	var $id;
 	var $name;
+	var $rate;
 	var $parentTaskId;
 	var $total;
 	var $cost;
@@ -13,6 +14,7 @@ class Task {
 	function Task($assocTask, $ascendantTasksIds = array()) {
 		$this->id = $assocTask['id'];
 		$this->name = $assocTask['name'];
+		$this->rate = isset($assocTask['rate']) ? $assocTask['rate'] : NULL;
 		$this->total = isset($assocTask['total']) ? $assocTask['total'] : NULL;
 		$this->parentTaskId = isset($assocTask['parent']) ? $assocTask['parent'] : NULL;
 		$this->worktimes = array();
@@ -20,10 +22,10 @@ class Task {
 		$this->isActive = FALSE;
 		$this->ascendantTasksIds = $ascendantTasksIds;
 
-		$this->_CountCost();
+		$this->_countCost();
 	}
 
-	function AddWorktime($worktime) {
+	function addWorktime($worktime) {
 
 		$this->worktimes[$worktime->id] = $worktime;
 
@@ -37,36 +39,44 @@ class Task {
 		}
 	}
 
-	function Rename($name) {
+	function edit($name, $rate) {
 		$name = trim($name);
 		if (!$name) {
 			return 'Exception: empty taskName';
+		}
+		if (!preg_match('/^([0-9]+\\.?[0-9]*)|([0-9]*\\.?[0-9]+)$/', $rate)) {
+			return 'Exception: bad taskRate = "' . $rate . '"';
 		}
 
 		$db = &$this->_getDb();
 		$db->query("
 			UPDATE task
-			SET name = '". pg_escape_string($name) ."'
+			SET
+				name = '". $db->escape_string($name) ."',
+				rate = " . $db->escape_string($rate) ."
 			WHERE id = $this->id
 		");
 	}
 
-	function Start() {
+	function start() {
 		if ($this->isActive) {
 			return 'Exception: already started';
 		}
 
 		$db = &$this->_getDb();
-		$db->query("
+		$rs = $db->query("
 			INSERT INTO worktime(task, start_time)
 			VALUES($this->id, 'now')
 		");
+
+		$worktime_id = $db->last_insert_id('worktime');
+
 		$rs = $db->query("
 			SELECT *, stop_time - start_time AS duration
 			FROM worktime
-			WHERE id = currval('worktime_id_seq')
+			WHERE id = $worktime_id
 		");
-		$worktime = new Worktime($db->fetch_assoc($rs));
+		$worktime = new Worktime($db->fetch($rs));
 
 		list($this->activeWorktimeId) = $worktime->id;
 		$this->isActive = TRUE;
@@ -88,19 +98,19 @@ class Task {
 		");
 	}
 
-	function Stop() {
+	function stop() {
 		if (!$this->isActive) {
 			return 'Exception: already stopped';
 		}
 
-		$result = $this->worktimes[$this->activeWorktimeId]->Stop();
+		$result = $this->worktimes[$this->activeWorktimeId]->stop();
 		$this->activeWorktimeId = NULL;
 		$this->isActive = FALSE;
 
 		return $result;
 	}
 
-	function Delete() {
+	function delete() {
 		$db = &$this->_getDb();
 		$db->query("
 			DELETE FROM task
@@ -108,9 +118,9 @@ class Task {
 		");
 	}
 
-	function DeleteWorktime($worktimeId) {
+	function deleteWorktime($worktimeId) {
 		if (isset($this->worktimes[$worktimeId])) {
-			$this->worktimes[$worktimeId]->Delete();
+			$this->worktimes[$worktimeId]->delete();
 			unset($this->worktimes[$worktimeId]);
 			if ($worktimeId == $this->activeWorktimeId) {
 				$this->activeWorktimeId = NULL;
@@ -125,7 +135,7 @@ class Task {
 	/**
 	 * Counts $this->cost and parses $this->total
 	 */
-	function _CountCost() {
+	function _countCost() {
 		if ($this->total) {
 			list($hours, $minutes, $seconds) = explode(':', $this->total);
 
@@ -140,7 +150,7 @@ class Task {
 				}
 			}
 			$this->total = (int)$hours . ':' . $minutes;
-			$this->cost = round(5*($hours + $minutes/60), 2);
+			$this->cost = round($this->rate*($hours + $minutes/60), 2);
 		}
 		else {
 			$this->cost = NULL;
@@ -148,7 +158,7 @@ class Task {
 	}
 
 	function &_getDb() {
-		return new DB;
+		return new DB();
 	}
 }
 ?>

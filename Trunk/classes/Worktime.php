@@ -15,7 +15,7 @@ class Worktime {
 		$this->duration = $assocWorktime['duration'];
 	}
 
-	function Edit($startTime, $stopTime) {
+	function edit($startTime, $stopTime) {
 		if (!preg_match('/^20[0-9]{2}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$/',
 			$startTime)
 		) {
@@ -32,16 +32,16 @@ class Worktime {
 			return 'Exception: stopTime is not greater than startTime';
 		}
 
-		
+
 		$db = &$this->_getDb();
-		
+
 		// Update worktime
 		$rs = $db->query("
 			UPDATE worktime
 			SET start_time = '$startTime', stop_time = '$stopTime'
 			WHERE id = $this->id
 		");
-		
+
 		// Select updated values
 		$rs = $db->query("
 			SELECT
@@ -53,11 +53,11 @@ class Worktime {
 			FROM worktime
 			WHERE id = $this->id
 		");
-		
-		list($this->startTime, $this->stopTime, $this->duration) = $db->fetch_row($rs);
+
+		list($this->startTime, $this->stopTime, $this->duration) = $db->fetch($rs);
 	}
-	
-	function Stop() {
+
+	function stop() {
 		if ($this->stopTime) {
 			return 'Exception: already stopped';
 		}
@@ -79,11 +79,11 @@ class Worktime {
 			FROM worktime
 			WHERE id = $this->id
 		");
-		list($this->stopTime, $this->duration) = $db->fetch_row($rs);
+		list($this->stopTime, $this->duration) = $db->fetch($rs);
 		$db->query("COMMIT");
 	}
 
-	function Delete() {
+	function delete() {
 		$db = &$this->_getDB();
 
 		$db->query("
@@ -91,9 +91,9 @@ class Worktime {
 			WHERE id = $this->id
 		");
 	}
-	
+
 	function &_getDB() {
-		return new DB;
+		return new DB();
 	}
 }
 
