@@ -15,19 +15,21 @@ class Statistics {
 
 		// Fetch today time
 		$rs = $db->query("
-			SELECT to_hms(SUM(stop_time - start_time)) AS time
+			SELECT
+				to_hms(SUM(stop_time - start_time)) AS time
+				,SUM(compute_cost(stop_time - start_time, task.rate)) AS cost
 			FROM worktime
-			WHERE TO_CHAR(start_time - '7 hours'::interval, 'YYYY-DDD')
-				= TO_CHAR('now'::timestamp - '7 hours'::interval, 'YYYY-DDD')
+				INNER JOIN task ON worktime.task = task.id
+			WHERE to_day(start_time - '7 hours'::interval)
+				= to_day('now'::timestamp - '7 hours'::interval)
 		");
 
-		list($time) = $db->fetch($rs);
+		list($time, $cost) = $db->fetch($rs);
 
+		$today = NULL;
 		if ($time) {
-			$today = $this->ParseTime($time);
-		}
-		else {
-			$today = NULL;
+			$today['time'] = $this->ParseTime($time);
+			$today['cost'] = $cost;
 		}
 
 		return $today;
@@ -40,27 +42,32 @@ class Statistics {
 
 		// Fetch today time
 		$rs = $db->query("
-			SELECT to_hms(SUM(stop_time - start_time)) AS time
+			SELECT
+				to_hms(SUM(stop_time - start_time)) AS time
+				,SUM(compute_cost(stop_time - start_time, task.rate)) AS cost
 			FROM worktime
 				INNER JOIN task ON worktime.task = task.id
 			WHERE task.parent $headTaskId
 		");
 
-		list($time) = $db->fetch($rs);
+		list($time, $cost) = $db->fetch($rs);
 
+		$group = NULL;
 		if ($time) {
-			$group = $this->ParseTime($time);
-		}
-		else {
-			$group = NULL;
+			$group['time'] = $this->ParseTime($time);
+			$group['cost'] = $cost;
 		}
 
 		return $group;
 	}
 
+	/**
+	 * Rounds given $time string to 'HHH:ii'.
+	 * Input:
+	 * 	$time like '23:59:34'
+	 * Output: string like '24:00'
+	 */
 	function ParseTime($time) {
-		$cost = '0';
-
 		if ($time) {
 			list($hours, $minutes, $seconds) = explode(':', $time);
 
@@ -75,13 +82,9 @@ class Statistics {
 				}
 			}
 			$time = (int)$hours . ':' . $minutes;
-			$cost = round(5*($hours + $minutes/60), 2);
-		}
-		else {
-			$cost = '0';
 		}
 
-		return array('time' => $time, 'cost' => $cost);
+		return $time;
 	}
 
 	function &_getDb() {

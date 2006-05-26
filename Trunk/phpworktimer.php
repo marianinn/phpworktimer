@@ -21,7 +21,7 @@ class phpworktimer {
 		require($CFG['classes_dir'] . '/TaskManager.php');
 		require($CFG['classes_dir'] . '/Task.php');
 		require($CFG['classes_dir'] . '/Worktime.php');
-		require($CFG['classes_dir'] . '/Statistics.tmp.php');
+		require($CFG['classes_dir'] . '/Statistics.php');
 
 		session_start();
 		if (!isset($_SESSION['key'])) {

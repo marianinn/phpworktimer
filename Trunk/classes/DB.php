@@ -52,6 +52,7 @@ class DB {
 		if (!is_resource($rs)) {
 			v();
 			v($sql);
+			exit;
 		}
 		else {
 			return $rs;

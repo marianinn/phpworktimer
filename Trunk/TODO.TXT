@@ -1,5 +1,4 @@
 Bugs:
-* statistics.php doesn't concern task.rate.
 * Edit active worktime causes Javascript error.
 * Different browsers.
 
@@ -14,6 +13,7 @@ Features:
 
 
 Code:
+* move statistics' time parsing to a stored procedure
 * what is the exit() call in DB.php
 * rename all names to java-like in DB
 * stick more simple tests
