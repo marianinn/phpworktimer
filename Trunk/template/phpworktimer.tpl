@@ -513,23 +513,29 @@ window.onkeypress = Myonkeypress;
 						</td>
 					{if not $worktime->stopTime}
 						<td colspan="3" class="worktimeStartTimeActive">
-							{$worktime->startTime}
+							{$worktime->startTime|date_format:"%Y-%m-%d %H:%M:%S"}
 						</td>
 						<td></td>
 						<td></td>
 					{else}
 						<td class="worktimeStartTime">
-							<span id="spanWorktimeStartTime{$worktime->id}">{$worktime->startTime}</span>
+							<span id="spanWorktimeStartTime{$worktime->id}">
+								{$worktime->startTime|date_format:"%Y-%m-%d %H:%M:%S"}
+							</span>
 							<input type="text" id="textWorktimeStartTime{$worktime->id}"
-								class="worktimeStartTime" value="{$worktime->startTime}"
+								class="worktimeStartTime"
+								value="{$worktime->startTime|date_format:"%Y-%m-%d %H:%M:%S"}"
 								onkeypress="if(event.keyCode==13) EditWorktime({$worktime->id})"
 							/>
 						</td>
 						<td class="worktimeDivider">--</td>
 						<td class="worktimeStopTime">
-							<span id="spanWorktimeStopTime{$worktime->id}">{$worktime->stopTime}</span>
+							<span id="spanWorktimeStopTime{$worktime->id}">
+								{$worktime->stopTime|date_format:"%Y-%m-%d %H:%M:%S"}
+							</span>
 							<input type="text" id="textWorktimeStopTime{$worktime->id}"
-								class="worktimeStopTime" value="{$worktime->stopTime}"
+								class="worktimeStopTime"
+								value="{$worktime->stopTime|date_format:"%Y-%m-%d %H:%M:%S"}"
 								onkeypress="if(event.keyCode==13) EditWorktime({$worktime->id})"
 							/>
 						</td>

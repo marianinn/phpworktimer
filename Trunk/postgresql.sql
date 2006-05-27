@@ -6,7 +6,8 @@ CREATE TABLE task (
 	parent INT4,
 	rate NUMERIC NOT NULL,
 	name VARCHAR NOT NULL,
-	order_time TIMESTAMP(0) NOT NULL DEFAULT ('now'::TEXT)::TIMESTAMP(0),
+	order_time TIMESTAMP(0) WITH TIME ZONE NOT NULL
+		DEFAULT ('now'::TEXT)::TIMESTAMP(0) WITH TIME ZONE,
 
 	PRIMARY KEY (id),
 	FOREIGN KEY (parent) REFERENCES task (id) ON DELETE CASCADE ON UPDATE CASCADE
@@ -18,8 +19,9 @@ CREATE SEQUENCE worktime_id_seq;
 CREATE TABLE worktime (
 	id INT4 NOT NULL DEFAULT nextval('worktime_id_seq'),
 	task INT4 NOT NULL,
-	start_time TIMESTAMP(0) NOT NULL DEFAULT 'now',
-	stop_time TIMESTAMP(0),
+	start_time TIMESTAMP(0) WITH TIME ZONE NOT NULL
+		DEFAULT ('now'::TEXT)::TIMESTAMP(0) WITH TIME ZONE,
+	stop_time TIMESTAMP(0) WITH TIME ZONE,
 
 	PRIMARY KEY (id),
 	FOREIGN KEY (task) REFERENCES task (id) ON DELETE CASCADE ON UPDATE CASCADE
@@ -28,8 +30,9 @@ CREATE INDEX worktime_task_idx ON worktime(task);
 CREATE INDEX worktime_start_time_idx ON worktime(to_day(start_time));
 
 -- Is used to compare two dates only by day
-CREATE OR REPLACE FUNCTION to_day(TIMESTAMP(0)) RETURNS INTEGER AS '
-	SELECT (EXTRACT(YEAR FROM $1) * 1000 + EXTRACT(DOY FROM $1))::INTEGER
+-- ( to_day(date1) = to_day(date2) ) <=> ( date1 is the same day as date2 )
+CREATE OR REPLACE FUNCTION to_day(TIMESTAMP(0) WITH TIME ZONE) RETURNS INTEGER AS '
+	SELECT (EXTRACT(YEAR FROM $1)::INTEGER * 512 + EXTRACT(DOY FROM $1)::INTEGER)
 ' LANGUAGE SQL IMMUTABLE RETURNS NULL ON NULL INPUT;
 
 -- Parses an interval to varchar like '123:24:56'
