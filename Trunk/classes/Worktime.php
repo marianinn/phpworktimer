@@ -47,9 +47,7 @@ class Worktime {
 			SELECT
 				start_time,
 				stop_time,
-				EXTRACT(day FROM stop_time - start_time)*24
-					+ EXTRACT(hour FROM stop_time - start_time)
-					|| TO_CHAR(stop_time - start_time, ':MI:SS') AS duration
+				to_hms(stop_time - start_time) AS duration
 			FROM worktime
 			WHERE id = $this->id
 		");
@@ -65,10 +63,12 @@ class Worktime {
 		$db = &$this->_getDB();
 
 		$db->query("BEGIN");
+		$now = date('Y-m-d H:i:s O');
+
 		$db->query("
 			UPDATE worktime
-			SET stop_time = 'now'
-			WHERE id = $this->id
+			SET stop_time = '". $now ."'
+			WHERE id = ". $this->id ."
 		");
 
 		// Refresh $this
@@ -77,7 +77,7 @@ class Worktime {
 				stop_time,
 				stop_time - start_time AS duration
 			FROM worktime
-			WHERE id = $this->id
+			WHERE id = ". $this->id ."
 		");
 		list($this->stopTime, $this->duration) = $db->fetch($rs);
 		$db->query("COMMIT");
@@ -88,7 +88,7 @@ class Worktime {
 
 		$db->query("
 			DELETE FROM worktime
-			WHERE id = $this->id
+			WHERE id = ". $this->id ."
 		");
 	}
 

@@ -64,9 +64,12 @@ class Task {
 		}
 
 		$db = &$this->_getDb();
+		$rs = $db->query("BEGIN");
+		$now = date('Y-m-d H:i:s O');
+
 		$rs = $db->query("
 			INSERT INTO worktime(task, start_time)
-			VALUES($this->id, 'now')
+			VALUES(". $this->id .", '". $now ."')
 		");
 
 		$worktime_id = $db->last_insert_id('worktime');
@@ -93,9 +96,11 @@ class Task {
 		$tasksIds[] = $this->id;
 		$rs = $db->query("
 			UPDATE task
-			SET order_time = 'now'
+			SET order_time = '". $now ."'
 			WHERE id IN(".join(', ', $tasksIds).")
 		");
+
+		$rs = $db->query("COMMIT");
 	}
 
 	function stop() {

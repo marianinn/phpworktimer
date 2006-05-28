@@ -20,8 +20,9 @@ class Statistics {
 				,SUM(compute_cost(stop_time - start_time, task.rate)) AS cost
 			FROM worktime
 				INNER JOIN task ON worktime.task = task.id
-			WHERE to_day(start_time - '7 hours'::interval)
-				= to_day('now'::timestamp - '7 hours'::interval)
+			WHERE to_day(start_time - '7 hours'::interval) =
+				to_day('". date('Y-m-d H:i:s O') ."'::timestamp(0) with time zone
+				- '7 hours'::interval)
 		");
 
 		list($time, $cost) = $db->fetch($rs);
