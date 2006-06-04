@@ -16,6 +16,7 @@ class phpworktimer {
 	function _Init() {
 		global $CFG;
 
+		require($CFG['root_dir'] . '/v.php');
 		require($CFG['smarty_dir'] . '/Smarty.class.php');
 		require($CFG['classes_dir'] . '/DB.php');
 		require($CFG['classes_dir'] . '/TaskManager.php');

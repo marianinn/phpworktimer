@@ -1,15 +1,21 @@
 <?php
 class PgDB {
+	var $dbh;
+
+	function show_last_error() {
+		// warning was shown;
+	}
+
 	function connect($connection_str) {
-		return pg_connect($connection_str); // warning was shown
+		$this->dbh = pg_connect($connection_str);
 	}
 
-	function close($dbh) {
-		return pg_close($dbh); // warning was shown
+	function close() {
+		return pg_close($this->dbh);
 	}
 
-	function query($dbh, $sql) {
-		return pg_query($dbh, $sql); // warning was shown
+	function query($sql) {
+		return pg_query($this->dbh, $sql);
 	}
 
 	function num_rows($rs) {

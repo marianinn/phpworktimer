@@ -4,14 +4,18 @@ $CFG = array();
 
 $CFG['root_dir'] = dirname(__FILE__);
 
-// valid are 'postgresql' and 'sqlite'
+// valid are 'postgresql' and 'mysql'
 $CFG['database_type'] = 'postgresql';
+#$CFG['database_type'] = 'mysql';
 
 // only for PostgreSQL
 $CFG['pg_connection_string'] = 'host=localhost port=5432 user=uzver dbname=phpworktimer password=nlu';
 
-// only for SQLite
-$CFG['sqlite_db_filename'] = 'phpworktimer.db';
+// only for MySQL
+$CFG['mysql_server'] = 'localhost';
+$CFG['mysql_username'] = 'root';
+$CFG['mysql_password'] = '';
+$CFG['mysql_db_name'] = 'phpworktimer';
 
 // used php.ini::include_dir
 $CFG['smarty_dir'] = 'smarty';

@@ -2,13 +2,10 @@
 // Delegates its duties to the $_db field.
 class DB {
 	var $_db;// static
-	var $_dbh;// static
 
 	function DB() {
 		static $db = NULL;
-		static $dbh = NULL;
 		$this->_db = &$db;
-		$this->_dbh = &$dbh;
 
 		if ($this->_db === NULL)
 		{
@@ -23,33 +20,40 @@ class DB {
 		{
 			include($CFG['classes_dir'] .'/PgDB.php');
 			$this->_db = new PgDB();
-			$connection_str = $CFG['pg_connection_string'];
+			$this->_db->connect($CFG['pg_connection_string']);
 		}
-		elseif ($CFG['database_type'] == 'sqlite')
+		elseif ($CFG['database_type'] == 'mysql')
 		{
-			include($CFG['classes_dir'] .'/SQLiteDB.php');
-			$this->_db = new SQLiteDB();
-			$connection_str = $CFG['sqlite_db_filename'];
+			include($CFG['classes_dir'] .'/MysqlDB.php');
+			$this->_db = new MysqlDB();
+			$result = $this->_db->connect(
+				$CFG['mysql_server'],
+				$CFG['mysql_username'],
+				$CFG['mysql_password'],
+				$CFG['mysql_db_name']
+			);
+
+			if (!$result) {
+				echo('Refused to select database "'. $CFG['mysql_db_name'] .'"');
+				v($result);
+				exit;
+			}
 		}
 		else
 		{
 			exit('Error: bad CFG[database_type]');
 		}
-		$this->connect($connection_str);
-	}
-
-	function connect($connection_str) {
-		$this->_dbh = $this->_db->connect($connection_str);
 	}
 
 	function close() {
-		$this->_db->close($this->_dbh);
-		$this->_dbh = NULL;
+		$this->_db->close();
+		$this->_db = NULL;
 	}
 
 	function query($sql) {
-		$rs = $this->_db->query($this->_dbh, $sql);
+		$rs = $this->_db->query($sql);
 		if (!is_resource($rs)) {
+			$this->_db->show_last_error();
 			v();
 			v($sql);
 			exit;
