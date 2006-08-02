@@ -1,35 +1,16 @@
 <?php
-    // $Id: options_test.php,v 1.9 2005/01/13 01:31:57 lastcraft Exp $
-    
-    require_once(dirname(__FILE__) . '/../options.php');
-    
-    class TestOfOptions extends UnitTestCase {
-
-        function testMockBase() {
-            $old_class = SimpleTestOptions::getMockBaseClass();
-            SimpleTestOptions::setMockBaseClass('Fred');
-            $this->assertEqual(SimpleTestOptions::getMockBaseClass(), 'Fred');
-            SimpleTestOptions::setMockBaseClass($old_class);
-        }
-        
-        function testStubBase() {
-            $old_class = SimpleTestOptions::getStubBaseClass();
-            SimpleTestOptions::setStubBaseClass('Fred');
-            $this->assertEqual(SimpleTestOptions::getStubBaseClass(), 'Fred');
-            SimpleTestOptions::setStubBaseClass($old_class);
-        }
-        
-        function testIgnoreList() {
-            $this->assertFalse(SimpleTestOptions::isIgnored('ImaginaryTestCase'));
-            SimpleTestOptions::ignore('ImaginaryTestCase');
-            $this->assertTrue(SimpleTestOptions::isIgnored('ImaginaryTestCase'));
-        }
-    }
+    // $Id: compatibility_test.php,v 1.2 2005/09/10 22:35:33 tswicegood Exp $
+    require_once(dirname(__FILE__) . '/../compatibility.php');
     
     class ComparisonClass {
     }
     
     class ComparisonSubclass extends ComparisonClass {
+    }
+    
+    if (version_compare(phpversion(), '5') >= 0) {
+        eval('interface ComparisonInterface { }');
+        eval('class ComparisonClassWithInterface implements ComparisonInterface { }');
     }
     
     class TestOfCompatibility extends UnitTestCase {
@@ -90,6 +71,20 @@
                         $object,
                         $object_assignment));
             }
+        }
+        
+        function testInteraceComparison() {
+            if (version_compare(phpversion(), '5', '<')) {
+                return;
+            }
+            
+            $object = new ComparisonClassWithInterface();
+            $this->assertFalse(SimpleTestCompatibility::isA(
+                    new ComparisonClass(),
+                    'ComparisonInterface'));
+            $this->assertTrue(SimpleTestCompatibility::isA(
+                    new ComparisonClassWithInterface(),
+                    'ComparisonInterface'));
         }
     }
 ?>

@@ -3,20 +3,30 @@
      *	Base include file for SimpleTest
      *	@package	SimpleTest
      *	@subpackage	UnitTester
-     *	@version	$Id: simple_test.php,v 1.89 2005/02/18 19:25:05 lastcraft Exp $
+     *	@version	$Id: test_case.php,v 1.21 2006/02/06 06:13:43 lastcraft Exp $
      */
 
     /**#@+
      * Includes SimpleTest files and defined the root constant
      * for dependent libraries.
      */
+    require_once(dirname(__FILE__) . '/invoker.php');
     require_once(dirname(__FILE__) . '/errors.php');
-    require_once(dirname(__FILE__) . '/options.php');
-    require_once(dirname(__FILE__) . '/runner.php');
+    require_once(dirname(__FILE__) . '/compatibility.php');
     require_once(dirname(__FILE__) . '/scorer.php');
     require_once(dirname(__FILE__) . '/expectation.php');
     require_once(dirname(__FILE__) . '/dumper.php');
+    require_once(dirname(__FILE__) . '/simpletest.php');
+    if (version_compare(phpversion(), '5') >= 0) {
+        require_once(dirname(__FILE__) . '/exceptions.php');
+        require_once(dirname(__FILE__) . '/reflection_php5.php');
+    } else {
+        require_once(dirname(__FILE__) . '/reflection_php4.php');
+    }
     if (! defined('SIMPLE_TEST')) {
+        /**
+         * @ignore
+         */
         define('SIMPLE_TEST', dirname(__FILE__) . '/');
     }
     /**#@-*/
@@ -30,8 +40,9 @@
 	 *    @subpackage	UnitTester
      */
     class SimpleTestCase {
-        var $_label;
-        var $_runner;
+        var $_label = false;
+        var $_reporter;
+        var $_observers;
 
         /**
          *    Sets up the test with no display.
@@ -40,8 +51,9 @@
          *    @access public
          */
         function SimpleTestCase($label = false) {
-            $this->_label = $label ? $label : get_class($this);
-            $this->_runner = false;
+            if ($label) {
+                $this->_label = $label;
+            }
         }
 
         /**
@@ -50,7 +62,7 @@
          *    @access public
          */
         function getLabel() {
-            return $this->_label;
+            return $this->_label ? $this->_label : get_class($this);
         }
 
         /**
@@ -59,19 +71,11 @@
          *    @access public
          */
         function &createInvoker() {
-            return new SimpleErrorTrappingInvoker(new SimpleInvoker($this));
-        }
-
-        /**
-         *    Can modify the incoming reporter so as to run
-         *    the tests differently. This version simply
-         *    passes it straight through.
-         *    @param SimpleReporter $reporter    Incoming observer.
-         *    @return SimpleReporter
-         *    @access protected
-         */
-        function &_createRunner(&$reporter) {
-            return new SimpleRunner($this, $reporter);
+            $invoker = &new SimpleErrorTrappingInvoker(new SimpleInvoker($this));
+            if (version_compare(phpversion(), '5') >= 0) {
+                $invoker = &new SimpleExceptionTrappingInvoker($invoker);
+            }
+            return $invoker;
         }
 
         /**
@@ -82,11 +86,63 @@
          *    @access public
          */
         function run(&$reporter) {
-            $reporter->paintCaseStart($this->getLabel());
-            $this->_runner = &$this->_createRunner($reporter);
-            $this->_runner->run();
-            $reporter->paintCaseEnd($this->getLabel());
+            SimpleTest::setCurrent($this);
+            $this->_reporter = &$reporter;
+            $this->_reporter->paintCaseStart($this->getLabel());
+            foreach ($this->getTests() as $method) {
+                if ($this->_reporter->shouldInvoke($this->getLabel(), $method)) {
+                    $invoker = &$this->_reporter->createInvoker($this->createInvoker());
+                    $invoker->before($method);
+                    $invoker->invoke($method);
+                    $invoker->after($method);
+                }
+            }
+            $this->_reporter->paintCaseEnd($this->getLabel());
+            unset($this->_reporter);
             return $reporter->getStatus();
+        }
+
+        /**
+         *    Gets a list of test names. Normally that will
+         *    be all internal methods that start with the
+         *    name "test". This method should be overridden
+         *    if you want a different rule.
+         *    @return array        List of test names.
+         *    @access public
+         */
+        function getTests() {
+            $methods = array();
+            foreach (get_class_methods(get_class($this)) as $method) {
+                if ($this->_isTest($method)) {
+                    $methods[] = $method;
+                }
+            }
+            return $methods;
+        }
+
+        /**
+         *    Tests to see if the method is a test that should
+         *    be run. Currently any method that starts with 'test'
+         *    is a candidate unless it is the constructor.
+         *    @param string $method        Method name to try.
+         *    @return boolean              True if test method.
+         *    @access protected
+         */
+        function _isTest($method) {
+            if (strtolower(substr($method, 0, 4)) == 'test') {
+                return ! SimpleTestCompatibility::isA($this, strtolower($method));
+            }
+            return false;
+        }
+
+        /**
+         *    Announces the start of the test.
+         *    @param string $method    Test method just started.
+         *    @access public
+         */
+        function before($method) {
+            $this->_reporter->paintMethodStart($method);
+            $this->_observers = array();
         }
 
         /**
@@ -107,12 +163,39 @@
         }
 
         /**
+         *    Announces the end of the test. Includes private clean up.
+         *    @param string $method    Test method just finished.
+         *    @access public
+         */
+        function after($method) {
+            for ($i = 0; $i < count($this->_observers); $i++) {
+                $this->_observers[$i]->atTestEnd($method);
+            }
+            $this->_reporter->paintMethodEnd($method);
+        }
+
+        /**
+         *    Sets up an observer for the test end.
+         *    @param object $observer    Must have atTestEnd()
+         *                               method.
+         *    @access public
+         */
+        function tell(&$observer) {
+            $this->_observers[] = &$observer;
+        }
+
+        /**
          *    Sends a pass event with a message.
          *    @param string $message        Message to send.
          *    @access public
          */
         function pass($message = "Pass") {
-            $this->_runner->paintPass($message . $this->getAssertionLine(' at line [%d]'));
+            if (! isset($this->_reporter)) {
+                trigger_error('Can only make assertions within test methods');
+            }
+            $this->_reporter->paintPass(
+                    $message . $this->getAssertionLine());
+            return true;
         }
 
         /**
@@ -121,36 +204,59 @@
          *    @access public
          */
         function fail($message = "Fail") {
-            $this->_runner->paintFail($message . $this->getAssertionLine(' at line [%d]'));
+            if (! isset($this->_reporter)) {
+                trigger_error('Can only make assertions within test methods');
+            }
+            $this->_reporter->paintFail(
+                    $message . $this->getAssertionLine());
+            return false;
         }
 
         /**
          *    Formats a PHP error and dispatches it to the
-         *    runner.
+         *    reporter.
          *    @param integer $severity  PHP error code.
          *    @param string $message    Text of error.
          *    @param string $file       File error occoured in.
          *    @param integer $line      Line number of error.
-         *    @param hash $globals      PHP super global arrays.
          *    @access public
          */
-        function error($severity, $message, $file, $line, $globals) {
-            $severity = SimpleErrorQueue::getSeverityAsString($severity);
-            $this->_runner->paintError(
+        function error($severity, $message, $file, $line) {
+            if (! isset($this->_reporter)) {
+                trigger_error('Can only make assertions within test methods');
+            }
+            $this->_reporter->paintError(
                     "Unexpected PHP error [$message] severity [$severity] in [$file] line [$line]");
         }
 
         /**
-         *    Sends a user defined event to the test runner.
+         *    Formats an exception and dispatches it to the
+         *    reporter.
+         *    @param Exception $exception    Object thrown.
+         *    @access public
+         */
+        function exception($exception) {
+            $this->_reporter->paintError(
+                    'Unexpected exception of type [' . get_class($exception) .
+                    '] with message ['. $exception->getMessage() .
+                    '] in ['. $exception->getFile() .
+                    '] line [' . $exception->getLine() . ']');
+        }
+
+        /**
+         *    Sends a user defined event to the test reporter.
          *    This is for small scale extension where
-         *    both the test case and either the runner or
+         *    both the test case and either the reporter or
          *    display are subclassed.
          *    @param string $type       Type of event.
          *    @param mixed $payload     Object or message to deliver.
          *    @access public
          */
         function signal($type, &$payload) {
-            $this->_runner->paintSignal($type, $payload);
+            if (! isset($this->_reporter)) {
+                trigger_error('Can only make assertions within test methods');
+            }
+            $this->_reporter->paintSignal($type, $payload);
         }
 
         /**
@@ -166,15 +272,22 @@
          *    Runs an expectation directly, for extending the
          *    tests with new expectation classes.
          *    @param SimpleExpectation $expectation  Expectation subclass.
-         *    @param mixed $test_value               Value to compare.
+         *    @param mixed $compare               Value to compare.
          *    @param string $message                 Message to display.
          *    @return boolean                        True on pass
          *    @access public
          */
-        function assertExpectation(&$expectation, $test_value, $message = '%s') {
+        function assert(&$expectation, $compare, $message = '%s') {
             return $this->assertTrue(
-                    $expectation->test($test_value),
-                    sprintf($message, $expectation->overlayMessage($test_value)));
+                    $expectation->test($compare),
+                    sprintf($message, $expectation->overlayMessage($compare)));
+        }
+
+        /**
+         *	  @deprecated
+         */
+        function assertExpectation(&$expectation, $compare, $message = '%s') {
+        	return $this->assert($expectation, $compare, $message);
         }
 
         /**
@@ -191,11 +304,9 @@
                 $message = 'True assertion got ' . ($result ? 'True' : 'False');
             }
             if ($result) {
-                $this->pass($message);
-                return true;
+                return $this->pass($message);
             } else {
-                $this->fail($message);
-                return false;
+                return $this->fail($message);
             }
         }
 
@@ -226,11 +337,11 @@
          *                             method embedded in format string.
          *    @access public
          */
-        function getAssertionLine($format = '%d', $stack = false) {
+        function getAssertionLine($stack = false) {
             if ($stack === false) {
                 $stack = SimpleTestCompatibility::getStackTrace();
             }
-            return SimpleDumper::getFormattedAssertionLine($stack, $format);
+            return SimpleDumper::getFormattedAssertionLine($stack);
         }
 
         /**
@@ -247,7 +358,7 @@
             if ($message) {
                 $formatted = $message . "\n" . $formatted;
             }
-            $this->_runner->paintFormattedMessage($formatted);
+            $this->_reporter->paintFormattedMessage($formatted);
             return $variable;
         }
 
@@ -258,7 +369,7 @@
          *    @access public
          */
         function sendMessage($message) {
-            $this->_runner->PaintMessage($message);
+            $this->_reporter->PaintMessage($message);
         }
 
         /**
@@ -291,8 +402,8 @@
          *                            of the test.
          *    @access public
          */
-        function GroupTest($label) {
-            $this->_label = $label;
+        function GroupTest($label = false) {
+            $this->_label = $label ? $label : get_class($this);
             $this->_test_cases = array();
             $this->_old_track_errors = ini_get('track_errors');
             $this->_xdebug_is_enabled = function_exists('xdebug_is_enabled') ?
@@ -329,7 +440,11 @@
          *    @access public
          */
         function addTestClass($class) {
-            $this->_test_cases[] = $class;
+            if ($this->_getBaseTestCase($class) == 'grouptest') {
+                $this->_test_cases[] = &new $class();
+            } else {
+                $this->_test_cases[] = $class;
+            }
         }
 
         /**
@@ -347,10 +462,11 @@
             }
             $classes = $this->_selectRunnableTests($existing_classes, get_declared_classes());
             if (count($classes) == 0) {
-                $this->addTestCase(new BadGroupTest($test_file, 'No new test cases'));
+                $this->addTestCase(new BadGroupTest($test_file, "No runnable test cases in [$test_file]"));
                 return;
             }
-            $this->addTestCase($this->_createGroupFromClasses($test_file, $classes));
+            $group = &$this->_createGroupFromClasses($test_file, $classes);
+            $this->addTestCase($group);
         }
 
         /**
@@ -365,10 +481,10 @@
             include($file);
             $error = isset($php_errormsg) ? $php_errormsg : false;
             $this->_disableErrorReporting();
-            $self_inflicted = array(
+            $self_inflicted_errors = array(
                     'Assigning the return value of new by reference is deprecated',
                     'var: Deprecated. Please use the public/private/protected modifiers');
-            if (in_array($error, $self_inflicted)) {
+            if (in_array($error, $self_inflicted_errors)) {
                 return false;
             }
             return $error;
@@ -403,7 +519,8 @@
 
         /**
          *    Calculates the incoming test cases from a before
-         *    and after list of loaded classes.
+         *    and after list of loaded classes. Skips abstract
+         *    classes.
          *    @param array $existing_classes   Classes before require().
          *    @param array $new_classes        Classes after require().
          *    @return array                    New classes which are test
@@ -416,10 +533,13 @@
                 if (in_array($class, $existing_classes)) {
                     continue;
                 }
-                if (! $this->_isTestCase($class)) {
-                    continue;
+                if ($this->_getBaseTestCase($class)) {
+                    $reflection = new SimpleReflection($class);
+                    if ($reflection->isAbstract()) {
+                        SimpleTest::ignore($class);
+                    }
+                    $classes[] = $class;
                 }
-                $classes[] = $class;
             }
             return $classes;
         }
@@ -432,31 +552,42 @@
          *                               test cases.
          *    @access private
          */
-        function _createGroupFromClasses($title, $classes) {
-            $group = new GroupTest($title);
+        function &_createGroupFromClasses($title, $classes) {
+            SimpleTest::ignoreParentsIfIgnored($classes);
+            $group = &new GroupTest($title);
             foreach ($classes as $class) {
-                if (SimpleTestOptions::isIgnored($class)) {
-                    continue;
+                if (! SimpleTest::isIgnored($class)) {
+                    $group->addTestClass($class);
                 }
-                $group->addTestClass($class);
             }
             return $group;
         }
 
         /**
          *    Test to see if a class is derived from the
-         *    TestCase class.
-         *    @param string $class            Class name.
+         *    SimpleTestCase class.
+         *    @param string $class     Class name.
          *    @access private
          */
-        function _isTestCase($class) {
+        function _getBaseTestCase($class) {
             while ($class = get_parent_class($class)) {
                 $class = strtolower($class);
                 if ($class == "simpletestcase" || $class == "grouptest") {
-                    return true;
+                    return $class;
                 }
             }
             return false;
+        }
+
+        /**
+         *    Delegates to a visiting collector to add test
+         *    files.
+         *    @param string $path                  Path to scan from.
+         *    @param SimpleCollector $collector    Directory scanner.
+         *    @access public
+         */
+        function collect($path, &$collector) {
+            $collector->collect($this, $path);
         }
 
         /**

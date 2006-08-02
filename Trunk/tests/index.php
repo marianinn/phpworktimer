@@ -11,7 +11,7 @@ require_once('Task.php');
 class ClassesTest extends GroupTest {
 	function ClassesTest() {
 		$this->GroupTest('Classes tests');
-		
+
 		$this->addTestCase(new WorktimeTest());
 		$this->addTestCase(new TaskTest());
 	}
@@ -21,5 +21,5 @@ if (RUNNER == __FILE__) {
 	$test = &new ClassesTest();
 	$test->run(new HtmlReporter());
 }
-	
+
 ?>

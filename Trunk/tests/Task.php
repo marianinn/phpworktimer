@@ -15,12 +15,12 @@ Mock::generate('Worktime');
 Mock::generatePartial(
 	'Task',
 	'MockPartTask',
-	array('_getDB')
+	array('_getDB', 'last_insert_id', )
 );
 Mock::generatePartial(
 	'Task',
 	'MockPartTask2',
-	array('_getDB')
+	array('_getDB', 'last_insert_id', )
 );
 
 class TaskTest extends UnitTestCase {
@@ -74,17 +74,13 @@ class TaskTest extends UnitTestCase {
 
 	function testStart() {
 		$mockDB = &new MockDB($this);
-		$mockDB->expectArgumentsAt(0, 'query',
-			array(new WantedPatternExpectation('/^\\s*INSERT/'))
-		);
-		$mockDB->expectArgumentsAt(1, 'query',
-			array(new WantedPatternExpectation('/^\\s*SELECT/'))
-		);
+		$mockDB->expectMinimumCallCount('query', 2);
 		$mockDB->setReturnValue('fetch', $this->assocWorktime);
 
 		$mockTask = &new MockPartTask($this);
 		$mockTask->Task($this->assocTask);
 		$mockTask->setReturnReference('_getDB', $mockDB);
+		$mockTask->setReturnValue('last_insert_id', 1);
 
 		$this->assertIdentical($mockDB, $mockTask->_getDB());
 		$this->assertNull($mockTask->activeWorktimeId);

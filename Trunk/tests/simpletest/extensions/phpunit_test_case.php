@@ -3,23 +3,21 @@
      *	adapter for SimpleTest to use PHPUnit test cases
      *	@package	SimpleTest
      *	@subpackage Extensions
-     *	@version	$Id: phpunit_test_case.php,v 1.3 2004/04/23 03:11:56 jsweat Exp $
+     *	@version	$Id: phpunit_test_case.php,v 1.6 2006/01/03 01:17:08 lastcraft Exp $
      */
     
     /**#@+
      * include SimpleTest files
      */
-    require_once dirname(__FILE__).DIRECTORY_SEPARATOR
-            .'..'.DIRECTORY_SEPARATOR . 'unit_tester.php';
-    require_once dirname(__FILE__).DIRECTORY_SEPARATOR
-            .'..'.DIRECTORY_SEPARATOR . 'expectation.php';
+    require_once(dirname(__FILE__) . '/../unit_tester.php');
+    require_once(dirname(__FILE__) . '/../expectation.php');
     /**#@-*/
     
     /**
      *    Adapter for sourceforge PHPUnit test case to allow
      *    legacy test cases to be used with SimpleTest.
      *    @package		SimpleTest
-     *    @subpackage	 Extensions
+     *    @subpackage	Extensions
      */
     class TestCase extends SimpleTestCase {
         
@@ -52,25 +50,18 @@
          *    @public
          */
         function assertEquals($first, $second, $message = false) {
-            $this->assertExpectation(
-                    new EqualExpectation($first),
-                    $second,
-                    $message);
+            parent::assert(new EqualExpectation($first), $second, $message);
         }
         
         /**
-         *    Will test straight equality if set to loose
-         *    typing, or identity if not.
+         *    Simple string equality.
          *    @param $first          First value.
          *    @param $second         Comparison value.
          *    @param $message        Message to display.
          *    @public
          */
         function assertEqualsMultilineStrings($first, $second, $message = false) {
-            $this->assertExpectation(
-                    new EqualExpectation($first),
-                    $second,
-                    $message);
+            parent::assert(new EqualExpectation($first), $second, $message);
         }                             
         
         /**
@@ -81,10 +72,7 @@
          *    @public
          */
         function assertRegexp($pattern, $subject, $message = false) {
-            $this->assertExpectation(
-                    new WantedPatternExpectation($pattern),
-                    $subject,
-                    $message);
+            parent::assert(new PatternExpectation($pattern), $subject, $message);
         }
         
         /**
@@ -94,7 +82,7 @@
          *    @public
          */
         function error($message) {
-            parent::assertTrue(false, "Error triggered [$message]");
+            parent::fail("Error triggered [$message]");
         }
          
         /**
