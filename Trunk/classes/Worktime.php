@@ -93,7 +93,8 @@ class Worktime {
 	}
 
 	function &_getDB() {
-		return new DB();
+		$db = &new DB();
+		return $db;
 	}
 }
 

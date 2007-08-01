@@ -163,7 +163,8 @@ class Task {
 	}
 
 	function &_getDb() {
-		return new DB();
+		$db = &new DB();
+		return $db;
 	}
 }
 ?>

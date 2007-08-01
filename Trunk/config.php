@@ -9,7 +9,7 @@ $CFG['database_type'] = 'postgresql';
 #$CFG['database_type'] = 'mysql';
 
 // only for PostgreSQL
-$CFG['pg_connection_string'] = 'host=localhost port=5432 user=uzver dbname=phpworktimer password=nlu';
+$CFG['pg_connection_string'] = 'host=localhost port=5432 user=phpworktimer dbname=phpworktimer password=nlu';
 
 // only for MySQL
 $CFG['mysql_server'] = 'localhost';
@@ -18,7 +18,7 @@ $CFG['mysql_password'] = '';
 $CFG['mysql_db_name'] = 'phpworktimer';
 
 // used php.ini::include_dir
-$CFG['smarty_dir'] = 'smarty';
+$CFG['smarty_dir'] = 'classes/smarty';
 
 $CFG['smarty_template_dir'] = $CFG['root_dir'] .'/template';
 

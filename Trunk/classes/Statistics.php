@@ -89,7 +89,8 @@ class Statistics {
 	}
 
 	function &_getDb() {
-		return new DB();
-	}
+		$db = &new DB();
+		return $db;
+		}
 }
 ?>

@@ -265,7 +265,8 @@ class TaskManager {
 	}
 
 	function &_getDb() {
-		return new DB();
+		$db = &new DB();
+		return $db;
 	}
 }
 ?>
