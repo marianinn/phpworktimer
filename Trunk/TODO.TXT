@@ -1,6 +1,7 @@
 Bugs:
 * Edit active worktime causes Javascript error.
 * Different browsers.
+* Can edit multiple entries. (should not)
 
 
 Features:
