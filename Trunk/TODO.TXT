@@ -1,5 +1,18 @@
 Bugs:
 * Edit active worktime causes Javascript error.
+* When starting head task.
+Warning: pg_query() [function.pg-query]: Query failed: ERROR: syntax error at or near "," LINE 4: WHERE id IN(, 1) ^ in C:\Program Files\Apache Software Foundation\Apache2\htdocs\phpworktimer\classes\PgDB.php on line 18
+Line 57, ¹ 0, file: C:\Program Files\Apache Software Foundation\Apache2\htdocs\phpworktimer\classes\DB.php, time: 17:57:56.712
+        [0] => (string, 107) < C:\Program Files\Apache Software Foundation\Apache2\htdocs\phpworktimer\classes\Task.php(101) @ db->query() >
+        [1] => (string, 115) < C:\Program Files\Apache Software Foundation\Apache2\htdocs\phpworktimer\classes\TaskManager.php(69) @ task->start() >
+        [2] => (string, 120) < C:\Program Files\Apache Software Foundation\Apache2\htdocs\phpworktimer\phpworktimer.php(147) @ taskmanager->starttask() >
+        [3] => (string, 119) < C:\Program Files\Apache Software Foundation\Apache2\htdocs\phpworktimer\phpworktimer.php(11) @ phpworktimer->_process() >
+        [4] => (string, 107) < C:\Program Files\Apache Software Foundation\Apache2\htdocs\phpworktimer\index.php(9) @ phpworktimer->main() >
+Line 58, ¹ 0, file: C:\Program Files\Apache Software Foundation\Apache2\htdocs\phpworktimer\classes\DB.php, time: 17:57:56.713
+$sql => (string, 86) < 			UPDATE task
+			SET order_time = '2007-12-17 17:57:56 +0200'
+			WHERE id IN(, 1)
+		 >
 * Different browsers.
 * Can edit multiple entries. (should not)
 

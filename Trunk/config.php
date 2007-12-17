@@ -9,7 +9,7 @@ $CFG['database_type'] = 'postgresql';
 #$CFG['database_type'] = 'mysql';
 
 // only for PostgreSQL
-$CFG['pg_connection_string'] = 'host=localhost port=5432 user=phpworktimer dbname=phpworktimer password=nlu';
+$CFG['pg_connection_string'] = 'host=localhost port=5432 user=phpworktimer dbname=phpworktimer password=phpworktimer';
 
 // only for MySQL
 $CFG['mysql_server'] = 'localhost';
