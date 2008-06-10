@@ -139,8 +139,12 @@ class TaskManager {
 			ORDER BY order_time DESC, id DESC
 		");
 
+		$tmp = $this->ascendantTasksIds;
+		if (!empty($this->headTask->id)) {
+			$tmp = array_merge($this->ascendantTasksIds, array($this->headTask->id));
+		}
 		while ($assocTask = $db->fetch($rs)) {
-			$task = new Task($assocTask, array_merge($this->ascendantTasksIds, array($this->headTask->id)));
+			$task = new Task($assocTask, $tmp);
 			$this->tasks[$task->id] = $task;
 		}
 
